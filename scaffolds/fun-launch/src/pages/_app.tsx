@@ -1,57 +1,33 @@
-import '@/styles/globals.css';
-import { Adapter, UnifiedWalletProvider } from '@jup-ag/wallet-adapter';
-import type { AppProps } from 'next/app';
-import { ThemeProvider, useTheme } from 'next-themes';
-import { Toaster } from 'sonner';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { useMemo } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useWindowWidthListener } from '@/lib/device';
+// @ts-nocheck
+import React, { useMemo } from "react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
+import { clusterApiUrl } from "@solana/web3.js";
 
-function AppProviders({ Component, pageProps }: AppProps) {
-  const { resolvedTheme } = useTheme();
 
-  const wallets: Adapter[] = useMemo(() => {
-    return [new PhantomWalletAdapter(), new SolflareWalletAdapter()].filter(
-      (item) => item && item.name && item.icon
-    ) as Adapter[];
-  }, []);
+import "@solana/wallet-adapter-react-ui/styles.css";
+import "../styles/globals.css";
 
-  const queryClient = useMemo(() => new QueryClient(), []);
+export default function App({ Component, pageProps }) {
+  // تحديد الشبكة (Devnet للـ Hackathon)
+  const network = WalletAdapterNetwork.Devnet;
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
-  useWindowWidthListener();
-
-  const walletTheme = resolvedTheme === 'light' ? 'light' : 'dark';
+  // إعداد المحافظ المدعومة
+  const wallets = useMemo(
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    [network]
+  );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <UnifiedWalletProvider
-        wallets={wallets}
-        config={{
-          env: 'mainnet-beta',
-          autoConnect: true,
-          metadata: {
-            name: 'UnifiedWallet',
-            description: 'UnifiedWallet',
-            url: 'https://jup.ag',
-            iconUrls: ['https://jup.ag/favicon.ico'],
-          },
-          // notificationCallback: WalletNotification,
-          theme: walletTheme,
-          lang: 'en',
-        }}
-      >
-        <Toaster theme={walletTheme} richColors closeButton />
-        <Component {...pageProps} />
-      </UnifiedWalletProvider>
-    </QueryClientProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <Component {...pageProps} />
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
-}
-
-export default function App(props: AppProps) {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-      <AppProviders {...props} />
-    </ThemeProvider>
-  );
-}
+ }
