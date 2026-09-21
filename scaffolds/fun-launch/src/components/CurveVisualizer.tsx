@@ -26,7 +26,7 @@ export const CurveVisualizer = ({ activePreset }) => {
   const [loading, setLoading] = useState(false);
   const [txSignature, setTxSignature] = useState(null);
 
-  // تحديث البيانات تلقائياً عند اختيار preset من الـ Marketplace
+  // Automatically update parameters when selecting a preset from the Marketplace
   useEffect(() => {
     if (activePreset) {
       setCurveType(activePreset.curveType);
@@ -62,11 +62,11 @@ export const CurveVisualizer = ({ activePreset }) => {
 
   const handleLaunch = async () => {
     if (!connected || !publicKey) {
-      alert("المرجو ربط المحفظة أولاً!");
+      alert("Please connect your wallet first!");
       return;
     }
     if (!tokenName || !tokenSymbol) {
-      alert("المرجو إدخال اسم الرمز والرمز التعبيري (Symbol)");
+      alert("Please enter the token name and symbol");
       return;
     }
 
@@ -82,11 +82,11 @@ export const CurveVisualizer = ({ activePreset }) => {
 
       const signature = await sendTransaction(transaction, connection);
       setTxSignature(signature);
-      alert("تم إنشاء الـ Bonding Curve بنجاح على الشبكة!");
+      alert("Bonding curve successfully created on-chain!");
     } catch (error) {
       console.error("DBC Launch Error:", error);
-      alert("حدث خطأ أثناء تنفيذ المعاملة");
-    } finally {
+      alert("An error occurred while executing the transaction");
+    } font-finally {
       setLoading(false);
     }
   };
@@ -146,7 +146,7 @@ export const CurveVisualizer = ({ activePreset }) => {
         </ResponsiveContainer>
       </div>
 
-      {/* مدخلات الرمز والسيولة */}
+      {/* Token and Liquidity Inputs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">Token Name</label>
@@ -192,7 +192,7 @@ export const CurveVisualizer = ({ activePreset }) => {
         </div>
       </div>
 
-      {/* زر إطلاق المعاملة */}
+      {/* Launch Transaction Button */}
       <button
         type="button"
         onClick={handleLaunch}
