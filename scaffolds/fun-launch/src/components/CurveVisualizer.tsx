@@ -86,7 +86,7 @@ export const CurveVisualizer = ({ activePreset }) => {
     } catch (error) {
       console.error("DBC Launch Error:", error);
       alert("An error occurred while executing the transaction");
-    } font-finally {
+    } finally {
       setLoading(false);
     }
   };
