@@ -1,14 +1,13 @@
 // @ts-nocheck
-import React, { useMemo } from "react";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
-import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { clusterApiUrl } from "@solana/web3.js";
+import React, { useMemo } from 'react';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
 
-
-import "@solana/wallet-adapter-react-ui/styles.css";
-import "../styles/globals.css";
+import '@solana/wallet-adapter-react-ui/styles.css';
+import '../styles/globals.css';
 
 export default function App({ Component, pageProps }) {
   // تحديد الشبكة (Devnet للـ Hackathon)
@@ -30,4 +29,4 @@ export default function App({ Component, pageProps }) {
       </WalletProvider>
     </ConnectionProvider>
   );
- }
+}

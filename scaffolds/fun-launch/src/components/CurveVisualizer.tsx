@@ -1,8 +1,8 @@
 // @ts-nocheck
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import React, { useState, useEffect } from 'react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import {
   LineChart,
   Line,
@@ -11,18 +11,18 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-} from "recharts";
-import { createBondingCurveTx } from "../lib/meteoraDbc";
+} from 'recharts';
+import { createBondingCurveTx } from '../lib/meteoraDbc';
 
 export const CurveVisualizer = ({ activePreset }) => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected } = useWallet();
 
-  const [curveType, setCurveType] = useState("exponential");
+  const [curveType, setCurveType] = useState('exponential');
   const [targetLiquidity, setTargetLiquidity] = useState(50000);
   const [feePercentage, setFeePercentage] = useState(1);
-  const [tokenName, setTokenName] = useState("");
-  const [tokenSymbol, setTokenSymbol] = useState("");
+  const [tokenName, setTokenName] = useState('');
+  const [tokenSymbol, setTokenSymbol] = useState('');
   const [loading, setLoading] = useState(false);
   const [txSignature, setTxSignature] = useState(null);
 
@@ -42,13 +42,13 @@ export const CurveVisualizer = ({ activePreset }) => {
       const supplyPercent = (i / steps) * 100;
       let price = 0;
 
-      if (curveType === "exponential") {
+      if (curveType === 'exponential') {
         price = Math.pow(i / steps, 2) * (targetLiquidity / 1000);
-      } else if (curveType === "flat") {
+      } else if (curveType === 'flat') {
         price = targetLiquidity / 1000;
-      } else if (curveType === "linear") {
+      } else if (curveType === 'linear') {
         price = (i / steps) * (targetLiquidity / 1000);
-      } else if (curveType === "rwa") {
+      } else if (curveType === 'rwa') {
         price = Math.floor((i / steps) * 5) * (targetLiquidity / 5000) + 1;
       }
 
@@ -62,11 +62,11 @@ export const CurveVisualizer = ({ activePreset }) => {
 
   const handleLaunch = async () => {
     if (!connected || !publicKey) {
-      alert("Please connect your wallet first!");
+      alert('Please connect your wallet first!');
       return;
     }
     if (!tokenName || !tokenSymbol) {
-      alert("Please enter the token name and symbol");
+      alert('Please enter the token name and symbol');
       return;
     }
 
@@ -82,16 +82,16 @@ export const CurveVisualizer = ({ activePreset }) => {
 
       const signature = await sendTransaction(transaction, connection);
       setTxSignature(signature);
-      alert("Bonding curve successfully created on-chain!");
+      alert('Bonding curve successfully created on-chain!');
     } catch (error) {
-      console.error("DBC Launch Error:", error);
-      alert("An error occurred while executing the transaction");
+      console.error('DBC Launch Error:', error);
+      alert('An error occurred while executing the transaction');
     } finally {
       setLoading(false);
     }
   };
 
-  const curveOptions = ["exponential", "flat", "linear", "rwa"];
+  const curveOptions = ['exponential', 'flat', 'linear', 'rwa'];
 
   return (
     <div className="p-6 bg-slate-900 text-white rounded-xl border border-slate-800 my-6 shadow-xl">
@@ -117,11 +117,11 @@ export const CurveVisualizer = ({ activePreset }) => {
             onClick={() => setCurveType(type)}
             className={`p-3 rounded-lg text-sm font-semibold capitalize border transition-all ${
               curveType === type
-                ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
-                : "bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600"
+                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
             }`}
           >
-            {type === "rwa" ? "🏛️ RWA / Stock" : `${type} Curve`}
+            {type === 'rwa' ? '🏛️ RWA / Stock' : `${type} Curve`}
           </button>
         ))}
       </div>
@@ -132,16 +132,8 @@ export const CurveVisualizer = ({ activePreset }) => {
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="supply" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />
-            <Tooltip
-              contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155" }}
-            />
-            <Line
-              type="monotone"
-              dataKey="Price"
-              stroke="#10b981"
-              strokeWidth={3}
-              dot={false}
-            />
+            <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+            <Line type="monotone" dataKey="Price" stroke="#10b981" strokeWidth={3} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -199,7 +191,7 @@ export const CurveVisualizer = ({ activePreset }) => {
         disabled={loading}
         className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 font-bold text-slate-950 rounded-lg transition-all shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50"
       >
-        {loading ? "Launching Dynamic DBC Pool..." : "🚀 Launch Token on Meteora DBC"}
+        {loading ? 'Launching Dynamic DBC Pool...' : '🚀 Launch Token on Meteora DBC'}
       </button>
 
       {txSignature && (

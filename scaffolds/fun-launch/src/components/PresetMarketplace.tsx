@@ -1,42 +1,42 @@
 // @ts-nocheck
-import React from "react";
+import React from 'react';
 
 const PRESETS = [
   {
-    id: "meme",
-    title: "🔥 Meme Launch",
-    description: "High initial volatility, steep exponential curve for fast hype generation.",
-    curveType: "exponential",
+    id: 'meme',
+    title: '🔥 Meme Launch',
+    description: 'High initial volatility, steep exponential curve for fast hype generation.',
+    curveType: 'exponential',
     targetLiquidity: 25000,
     feePercentage: 1.5,
-    tag: "Popular",
+    tag: 'Popular',
   },
   {
-    id: "steady",
-    title: "📈 Steady Growth",
-    description: "Linear bonding curve designed for long-term community building and reduced dumps.",
-    curveType: "linear",
+    id: 'steady',
+    title: '📈 Steady Growth',
+    description:
+      'Linear bonding curve designed for long-term community building and reduced dumps.',
+    curveType: 'linear',
     targetLiquidity: 100000,
     feePercentage: 0.5,
-    tag: "Low Risk",
+    tag: 'Low Risk',
   },
   {
-    id: "rwa",
-    title: "🏛️ RWA / Stock Pegged",
-    description: "Step-function price discovery curve tailored for real-world assets & tokenized stocks.",
-    curveType: "rwa",
+    id: 'rwa',
+    title: '🏛️ RWA / Stock Pegged',
+    description:
+      'Step-function price discovery curve tailored for real-world assets & tokenized stocks.',
+    curveType: 'rwa',
     targetLiquidity: 500000,
     feePercentage: 0.2,
-    tag: "Institutional",
+    tag: 'Institutional',
   },
 ];
 
 export const PresetMarketplace = ({ onSelectPreset }) => {
   return (
     <div className="my-8">
-      <h3 className="text-xl font-bold text-white mb-2">
-        ⚡ Select Curve Preset Marketplace
-      </h3>
+      <h3 className="text-xl font-bold text-white mb-2">⚡ Select Curve Preset Marketplace</h3>
       <p className="text-sm text-slate-400 mb-6">
         Pick a pre-configured Meteora DBC parameters suite or customize manually below.
       </p>
@@ -57,14 +57,16 @@ export const PresetMarketplace = ({ onSelectPreset }) => {
                   {preset.tag}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                {preset.description}
-              </p>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">{preset.description}</p>
             </div>
 
             <div className="pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs text-slate-300">
-              <span>Target: <strong>${preset.targetLiquidity.toLocaleString()}</strong></span>
-              <span>Fee: <strong>{preset.feePercentage}%</strong></span>
+              <span>
+                Target: <strong>${preset.targetLiquidity.toLocaleString()}</strong>
+              </span>
+              <span>
+                Fee: <strong>{preset.feePercentage}%</strong>
+              </span>
             </div>
           </div>
         ))}

@@ -1,17 +1,17 @@
 // @ts-nocheck
-import dynamic from "next/dynamic";
-import React, { useState } from "react";
-import { CurveVisualizer } from "../components/CurveVisualizer";
-import { PresetMarketplace } from "../components/PresetMarketplace";
+import dynamic from 'next/dynamic';
+import React, { useState } from 'react';
+import { CurveVisualizer } from '../components/CurveVisualizer';
+import { PresetMarketplace } from '../components/PresetMarketplace';
 
 const WalletMultiButton = dynamic(
-  async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false }
 );
 
 // Inline AI Assistant Component
 const AiAssistant = ({ onSelectPreset }) => {
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
 
@@ -22,18 +22,28 @@ const AiAssistant = ({ onSelectPreset }) => {
 
     setTimeout(() => {
       const text = prompt.toLowerCase();
-      let chosenPreset = "steady";
-      let explanation = "";
+      let chosenPreset = 'steady';
+      let explanation = '';
 
-      if (text.includes("meme") || text.includes("hype") || text.includes("pump") || text.includes("fast")) {
-        chosenPreset = "meme";
-        explanation = "🔥 Suggested Preset: **Meme Launch** — High volatility curve selected!";
-      } else if (text.includes("rwa") || text.includes("stock") || text.includes("estate") || text.includes("asset")) {
-        chosenPreset = "rwa";
-        explanation = "🏛️ Suggested Preset: **RWA / Stock Pegged** — Step-function curve selected!";
+      if (
+        text.includes('meme') ||
+        text.includes('hype') ||
+        text.includes('pump') ||
+        text.includes('fast')
+      ) {
+        chosenPreset = 'meme';
+        explanation = '🔥 Suggested Preset: **Meme Launch** — High volatility curve selected!';
+      } else if (
+        text.includes('rwa') ||
+        text.includes('stock') ||
+        text.includes('estate') ||
+        text.includes('asset')
+      ) {
+        chosenPreset = 'rwa';
+        explanation = '🏛️ Suggested Preset: **RWA / Stock Pegged** — Step-function curve selected!';
       } else {
-        chosenPreset = "steady";
-        explanation = "📈 Suggested Preset: **Steady Growth** — Linear curve selected!";
+        chosenPreset = 'steady';
+        explanation = '📈 Suggested Preset: **Steady Growth** — Linear curve selected!';
       }
 
       onSelectPreset(chosenPreset);
@@ -49,7 +59,8 @@ const AiAssistant = ({ onSelectPreset }) => {
         <h3 className="text-md font-bold text-purple-300">AI Launch Curve Assistant</h3>
       </div>
       <p className="text-xs text-slate-400 mb-3">
-        Describe your token idea (e.g., "A viral meme token" or "Real estate liquidity pool") and AI will pick the curve.
+        Describe your token idea (e.g., "A viral meme token" or "Real estate liquidity pool") and AI
+        will pick the curve.
       </p>
 
       <div className="flex gap-2">
@@ -59,7 +70,7 @@ const AiAssistant = ({ onSelectPreset }) => {
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Describe your token project..."
           className="flex-1 px-3 py-2 text-sm bg-slate-950 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-purple-500"
-          onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
+          onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
         />
         <button
           type="button"
@@ -67,13 +78,17 @@ const AiAssistant = ({ onSelectPreset }) => {
           disabled={isAnalyzing}
           className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-purple-500 transition-all disabled:opacity-50"
         >
-          {isAnalyzing ? "Analyzing..." : "Ask AI"}
+          {isAnalyzing ? 'Analyzing...' : 'Ask AI'}
         </button>
       </div>
 
       {suggestion && (
         <div className="mt-3 p-2.5 rounded-lg bg-purple-950/40 border border-purple-500/40 text-xs text-purple-200">
-          <span dangerouslySetInnerHTML={{ __html: suggestion.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+          <span
+            dangerouslySetInnerHTML={{
+              __html: suggestion.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'),
+            }}
+          />
         </div>
       )}
     </div>
@@ -82,31 +97,33 @@ const AiAssistant = ({ onSelectPreset }) => {
 
 const PRESETS_DATA = {
   meme: {
-    id: "meme",
-    title: "🔥 Meme Launch",
-    description: "High initial volatility, steep exponential curve for fast hype generation.",
-    curveType: "exponential",
+    id: 'meme',
+    title: '🔥 Meme Launch',
+    description: 'High initial volatility, steep exponential curve for fast hype generation.',
+    curveType: 'exponential',
     targetLiquidity: 25000,
     feePercentage: 1.5,
-    tag: "Popular",
+    tag: 'Popular',
   },
   steady: {
-    id: "steady",
-    title: "📈 Steady Growth",
-    description: "Linear bonding curve designed for long-term community building and reduced dumps.",
-    curveType: "linear",
+    id: 'steady',
+    title: '📈 Steady Growth',
+    description:
+      'Linear bonding curve designed for long-term community building and reduced dumps.',
+    curveType: 'linear',
     targetLiquidity: 100000,
     feePercentage: 0.5,
-    tag: "Low Risk",
+    tag: 'Low Risk',
   },
   rwa: {
-    id: "rwa",
-    title: "🏛️ RWA / Stock Pegged",
-    description: "Step-function price discovery curve tailored for real-world assets & tokenized stocks.",
-    curveType: "rwa",
+    id: 'rwa',
+    title: '🏛️ RWA / Stock Pegged',
+    description:
+      'Step-function price discovery curve tailored for real-world assets & tokenized stocks.',
+    curveType: 'rwa',
     targetLiquidity: 500000,
     feePercentage: 0.2,
-    tag: "Institutional",
+    tag: 'Institutional',
   },
 };
 
@@ -153,4 +170,4 @@ export default function Home() {
       </div>
     </main>
   );
- }
+}
