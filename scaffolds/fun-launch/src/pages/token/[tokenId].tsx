@@ -99,3 +99,7 @@ export default function TokenPage() {
     </DataStreamProvider>
   );
 }
+
+export const getServerSideProps = async () => {
+  return { props: {} };
+};
