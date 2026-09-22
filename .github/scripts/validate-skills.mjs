@@ -16,12 +16,13 @@ const repoRoot = path.resolve(new URL('.', import.meta.url).pathname, '../..');
 const skillsDir = path.join(repoRoot, 'skills');
 let failures = 0;
 
-const fail = (msg) => { failures++; console.error(`FAIL  ${msg}`); };
+const fail = (msg) => {
+  failures++;
+  console.error(`FAIL  ${msg}`);
+};
 const ok = (msg) => console.log(`ok    ${msg}`);
 
-const studioPkg = JSON.parse(
-  fs.readFileSync(path.join(repoRoot, 'studio/package.json'), 'utf-8')
-);
+const studioPkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'studio/package.json'), 'utf-8'));
 const studioVersions = Object.fromEntries(
   Object.entries(studioPkg.dependencies ?? {}).map(([k, v]) => [k, v.replace(/^[\^~]/, '')])
 );
@@ -34,14 +35,20 @@ const skillDirs = fs
 for (const dir of skillDirs) {
   const skillPath = path.join(skillsDir, dir);
   const skillMd = path.join(skillPath, 'SKILL.md');
-  if (!fs.existsSync(skillMd)) { fail(`${dir}: missing SKILL.md`); continue; }
+  if (!fs.existsSync(skillMd)) {
+    fail(`${dir}: missing SKILL.md`);
+    continue;
+  }
   const raw = fs.readFileSync(skillMd, 'utf-8');
   const lines = raw.split('\n');
 
   // 1. frontmatter
   if (lines[0] !== '---') fail(`${dir}: SKILL.md must start with '---' frontmatter`);
   const end = lines.indexOf('---', 1);
-  if (end === -1) { fail(`${dir}: unterminated frontmatter`); continue; }
+  if (end === -1) {
+    fail(`${dir}: unterminated frontmatter`);
+    continue;
+  }
   const fm = {};
   for (const line of lines.slice(1, end)) {
     const m = line.match(/^([A-Za-z-]+):\s*(.*)$/);
@@ -51,21 +58,28 @@ for (const dir of skillDirs) {
   if (name !== dir) fail(`${dir}: frontmatter name '${name}' != folder name`);
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) fail(`${dir}: name must be kebab-case [a-z0-9-]`);
   const desc = (fm.description ?? '').replace(/^"|"$/g, '');
-  if (desc.length < 1 || desc.length > 1024) fail(`${dir}: description must be 1..1024 chars (${desc.length})`);
+  if (desc.length < 1 || desc.length > 1024)
+    fail(`${dir}: description must be 1..1024 chars (${desc.length})`);
   if (fm.metadata) {
-    try { JSON.parse(fm.metadata); ok(`${dir}: metadata is single-line JSON`); }
-    catch { fail(`${dir}: metadata must be a single-line JSON object (OpenClaw parser)`); }
+    try {
+      JSON.parse(fm.metadata);
+      ok(`${dir}: metadata is single-line JSON`);
+    } catch {
+      fail(`${dir}: metadata must be a single-line JSON object (OpenClaw parser)`);
+    }
   }
 
   // 2. size guideline
-  if (lines.length > 500) fail(`${dir}: SKILL.md is ${lines.length} lines (spec guideline: <= 500)`);
+  if (lines.length > 500)
+    fail(`${dir}: SKILL.md is ${lines.length} lines (spec guideline: <= 500)`);
   else ok(`${dir}: SKILL.md ${lines.length} lines`);
 
   // 3. referenced paths exist
   const mdFiles = [skillMd];
   const refDir = path.join(skillPath, 'references');
   if (fs.existsSync(refDir)) {
-    for (const f of fs.readdirSync(refDir)) if (f.endsWith('.md')) mdFiles.push(path.join(refDir, f));
+    for (const f of fs.readdirSync(refDir))
+      if (f.endsWith('.md')) mdFiles.push(path.join(refDir, f));
   }
   const pathRe = /(?:\.\.\/)?(?:references|scripts|configs)\/[A-Za-z0-9_./-]+/g;
   for (const file of mdFiles) {
@@ -80,7 +94,9 @@ for (const dir of skillDirs) {
       const fromFile = fs.existsSync(path.resolve(fileDir, clean));
       const fromRoot = !clean.startsWith('../') && fs.existsSync(path.join(skillPath, clean));
       if (insideReferences && clean.startsWith('references/')) {
-        fail(`${path.relative(repoRoot, file)}: '${clean}' is self-prefixed — use the sibling path ('${clean.slice('references/'.length)}')`);
+        fail(
+          `${path.relative(repoRoot, file)}: '${clean}' is self-prefixed — use the sibling path ('${clean.slice('references/'.length)}')`
+        );
       } else if (!fromFile && !fromRoot) {
         fail(`${path.relative(repoRoot, file)}: broken reference '${clean}'`);
       }
@@ -96,7 +112,9 @@ for (const dir of skillDirs) {
       const pinned = m[2];
       const studio = studioVersions[pkg];
       if (studio && studio !== pinned) {
-        fail(`${path.relative(repoRoot, file)}: pins ${pkg}@${pinned} but studio declares ${studio} — update the reference pack`);
+        fail(
+          `${path.relative(repoRoot, file)}: pins ${pkg}@${pinned} but studio declares ${studio} — update the reference pack`
+        );
       }
     }
   }
@@ -115,7 +133,10 @@ for (const dir of skillDirs) {
   if (fs.existsSync(cfgDir)) {
     for (const f of fs.readdirSync(cfgDir)) {
       const studioCfg = path.join(repoRoot, 'studio/config', f);
-      if (!fs.existsSync(studioCfg)) { fail(`${dir}: configs/${f} has no studio/config counterpart`); continue; }
+      if (!fs.existsSync(studioCfg)) {
+        fail(`${dir}: configs/${f} has no studio/config counterpart`);
+        continue;
+      }
       if (fs.readFileSync(path.join(cfgDir, f), 'utf-8') !== fs.readFileSync(studioCfg, 'utf-8')) {
         fail(`${dir}: configs/${f} differs from studio/config/${f} — re-copy it`);
       }
@@ -124,5 +145,8 @@ for (const dir of skillDirs) {
   }
 }
 
-if (failures) { console.error(`\n${failures} failure(s)`); process.exit(1); }
+if (failures) {
+  console.error(`\n${failures} failure(s)`);
+  process.exit(1);
+}
 console.log('\nAll skill validations passed.');

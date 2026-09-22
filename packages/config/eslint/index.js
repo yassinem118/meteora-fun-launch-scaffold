@@ -5,57 +5,56 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
-    'prettier'
+    'prettier',
   ],
   plugins: ['@typescript-eslint', 'import', 'prettier'],
   env: {
     node: true,
-    es2022: true
+    es2022: true,
   },
   parserOptions: {
     ecmaVersion: 2022,
-    sourceType: 'module'
+    sourceType: 'module',
   },
   settings: {
     'import/resolver': {
       typescript: {
-        alwaysTryTypes: true
-      }
-    }
+        alwaysTryTypes: true,
+      },
+    },
   },
   rules: {
     // TypeScript specific rules
-    '@typescript-eslint/no-unused-vars': ['error', { 
-      argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_'
-    }],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    
+
     // Import rules
-    'import/order': ['error', {
-      groups: [
-        'builtin',
-        'external',
-        'internal',
-        'parent',
-        'sibling',
-        'index'
-      ],
-      'newlines-between': 'always',
-      alphabetize: {
-        order: 'asc',
-        caseInsensitive: true
-      }
-    }],
+    'import/order': [
+      'error',
+      {
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+        'newlines-between': 'always',
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+      },
+    ],
     'import/no-duplicates': 'error',
     'import/no-unresolved': 'error',
     'import/no-cycle': 'error',
-    
+
     // General rules
     'no-console': ['warn', { allow: ['warn', 'error'] }],
-    'prettier/prettier': 'error'
+    'prettier/prettier': 'error',
   },
   ignorePatterns: [
     'node_modules',
@@ -64,6 +63,6 @@ module.exports = {
     '.next',
     '.turbo',
     '*.config.js',
-    '*.config.ts'
-  ]
+    '*.config.ts',
+  ],
 };

@@ -24,7 +24,7 @@
   },
   "include": [
     "packages/**/*.ts",
-    "packages/**/*.tsx", 
+    "packages/**/*.tsx",
     "scaffolds/**/*.ts",
     "scaffolds/**/*.tsx",
     "studio/**/*.ts",

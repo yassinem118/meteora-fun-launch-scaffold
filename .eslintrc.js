@@ -1,19 +1,8 @@
 module.exports = {
-  root: true,
-  extends: ['@meteora-invent/config-eslint'],
-  parserOptions: {
-    project: './tsconfig.json',
-    tsconfigRootDir: __dirname,
+  extends: 'next/core-web-vitals',
+  rules: {
+    '@typescript-eslint/ban-ts-comment': 'off',
+    'react/no-unescaped-entities': 'off',
+    'react-hooks/exhaustive-deps': 'off',
   },
-  ignorePatterns: [
-    'node_modules',
-    'dist',
-    'build',
-    '.next',
-    '.turbo',
-    'coverage',
-    '*.config.js',
-    '*.config.ts',
-    '.eslintrc.js'
-  ],
 };

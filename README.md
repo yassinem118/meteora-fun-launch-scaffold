@@ -348,9 +348,8 @@ config key. This config key is used to create the DBC pool and contains all the 
 pre-graduation and post-graduation pools.
 
 **Note:** To launch Token 2022 tokens with a transfer hook, set `token.tokenType` to `1` and
-`transferHookProgram` in `dbcConfig`. The config is then created with
-`createConfigWithTransferHook` and every token launched on it executes the hook program on each
-transfer.
+`transferHookProgram` in `dbcConfig`. The config is then created with `createConfigWithTransferHook`
+and every token launched on it executes the hook program on each transfer.
 
 ```bash
 pnpm studio dbc-create-config
@@ -360,9 +359,8 @@ pnpm studio dbc-create-config
 
 Configure `dbcPool` in `dbc_config.jsonc` file and run the following command to create the DBC pool.
 
-**Note:** When the target config was created with a transfer hook, set
-`dbcPool.transferHookProgram` to the same hook program so the pool is created with
-`createPoolWithTransferHook`.
+**Note:** When the target config was created with a transfer hook, set `dbcPool.transferHookProgram`
+to the same hook program so the pool is created with `createPoolWithTransferHook`.
 
 _If you don't have a DBC config key, you can run the following command and the config key + pool
 will be created together._
@@ -489,12 +487,12 @@ pnpm --filter @meteora-invent/scaffold/fun-launch build
 
 ## 🤖 Agent Skill
 
-`skills/meteora` is the official [Agent Skill](https://agentskills.io) for Meteora: it
-teaches AI agents (Claude Code, OpenClaw, Hermes, Cursor, and any Agent-Skills-compatible
-runtime) how to run every studio action safely — devnet-first, dry-run-first, with explicit
-owner confirmation gates — and how to write correct TypeScript against the Meteora SDKs
-(version-pinned reference packs for DBC, DAMM v1/v2, and DLMM, plus runnable one-shot
-scripts for swaps, quotes, positions, and fee claims).
+`skills/meteora` is the official [Agent Skill](https://agentskills.io) for Meteora: it teaches AI
+agents (Claude Code, OpenClaw, Hermes, Cursor, and any Agent-Skills-compatible runtime) how to run
+every studio action safely — devnet-first, dry-run-first, with explicit owner confirmation gates —
+and how to write correct TypeScript against the Meteora SDKs (version-pinned reference packs for
+DBC, DAMM v1/v2, and DLMM, plus runnable one-shot scripts for swaps, quotes, positions, and fee
+claims).
 
 **Install:**
 
@@ -506,10 +504,9 @@ cp -R skills/meteora ~/.agents/skills/meteora
 # Working inside this repo with Claude Code? The skill is picked up from skills/ directly.
 ```
 
-The skill is validated in CI (`.github/scripts/validate-skills.mjs`): spec-compliant
-frontmatter, no broken references, SDK version pins matched against `studio/package.json`,
-config templates synced with `studio/config`, and all bundled scripts type-checked against
-the installed SDKs.
+The skill is validated in CI (`.github/scripts/validate-skills.mjs`): spec-compliant frontmatter, no
+broken references, SDK version pins matched against `studio/package.json`, config templates synced
+with `studio/config`, and all bundled scripts type-checked against the installed SDKs.
 
 ## 🏗️ Structure
 

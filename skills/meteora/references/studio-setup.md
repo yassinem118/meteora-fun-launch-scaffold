@@ -14,8 +14,8 @@ cd meteora-invent
 pnpm install
 ```
 
-**Requirements:** Node.js >= 22.12 and pnpm >= 10 — the repo sets `engine-strict`, so
-older Node versions fail at `pnpm install`.
+**Requirements:** Node.js >= 22.12 and pnpm >= 10 — the repo sets `engine-strict`, so older Node
+versions fail at `pnpm install`.
 
 ## Configure Environment
 
@@ -27,22 +27,24 @@ RPC endpoint, keypair path, and dry-run mode all live in the protocol config fil
   "rpcUrl": "https://api.devnet.solana.com",
   "dryRun": true,
   "keypairFilePath": "./keypair.json",
-  "computeUnitPriceMicroLamports": 100000
+  "computeUnitPriceMicroLamports": 100000,
 }
 ```
 
 **RPC options:**
+
 - Public mainnet: `https://api.mainnet-beta.solana.com`
 - Public devnet: `https://api.devnet.solana.com`
 - Premium (recommended): [Helius](https://www.helius.dev/), QuickNode, Triton
 
-**Optional:** `JUPITER_API_KEY` (and `JUPITER_API_URL`) in `studio/.env` — only needed to raise the rate limit on `zap-in-dlmm`'s live Jupiter quotes; every other action ignores them.
+**Optional:** `JUPITER_API_KEY` (and `JUPITER_API_URL`) in `studio/.env` — only needed to raise the
+rate limit on `zap-in-dlmm`'s live Jupiter quotes; every other action ignores them.
 
 ## Get a Wallet
 
-The studio signs with `studio/keypair.json`, produced by `generate-keypair` from a
-`PRIVATE_KEY` (base58) in `studio/.env`. **`generate-keypair` requires that env var — it
-converts keys, it does not create them.**
+The studio signs with `studio/keypair.json`, produced by `generate-keypair` from a `PRIVATE_KEY`
+(base58) in `studio/.env`. **`generate-keypair` requires that env var — it converts keys, it does
+not create them.**
 
 ```bash
 # Existing wallet: put its base58 private key in studio/.env
@@ -65,10 +67,9 @@ pnpm studio start-test-validator
 pnpm studio airdrop-sol --network localnet   # fixed 5 SOL per call; no --amount flag
 ```
 
-The validator preloads **all** Meteora programs — DLMM, DAMM v1, DAMM v2, DBC, Alpha
-Vault, Dynamic Vault, Met Lock, and Dynamic Fee Sharing, plus **Presale**, **Stake2Earn
-(M3M3)**, **Zap**, and **Pool Farms** — so every product's golden path is testable on
-localnet without faucets.
+The validator preloads **all** Meteora programs — DLMM, DAMM v1, DAMM v2, DBC, Alpha Vault, Dynamic
+Vault, Met Lock, and Dynamic Fee Sharing, plus **Presale**, **Stake2Earn (M3M3)**, **Zap**, and
+**Pool Farms** — so every product's golden path is testable on localnet without faucets.
 
 ## Verify Setup
 

@@ -1,6 +1,6 @@
 packages:
-  - "studio"
-  - "scaffolds/*"
-  - "packages/*"
-  - "packages/config/*"
-  - "packages/shared/*"
+  - 'studio'
+  - 'scaffolds/*'
+  - 'packages/*'
+  - 'packages/config/*'
+  - 'packages/shared/*'
