@@ -1,4 +1,4 @@
- import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import type { AppProps } from 'next/app';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
@@ -6,8 +6,8 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 
-// Load global styles without requiring a TypeScript declaration for CSS imports.
-// @ts-expect-error CSS modules are handled by Next.js at build time.
+// Load global styles
+// @ts-ignore
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {

@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
@@ -33,7 +33,7 @@ export const CurveVisualizer = ({
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [loading, setLoading] = useState(false);
-  const [txSignature, setTxSignature] = useState(null);
+  const [txSignature, setTxSignature] = useState<string | null>(null);
 
   // Automatically update parameters when selecting a preset from the Marketplace
   useEffect(() => {

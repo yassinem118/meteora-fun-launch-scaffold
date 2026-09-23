@@ -1,4 +1,4 @@
- import dynamic from 'next/dynamic';
+import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 import { CurveVisualizer } from '../components/CurveVisualizer';
 import { PresetMarketplace } from '../components/PresetMarketplace';
@@ -23,9 +23,7 @@ interface Preset {
 }
 
 // Inline AI Assistant Component
-const AiAssistant = ({
-  onSelectPreset,
-}: AiAssistantProps) => {
+const AiAssistant = ({ onSelectPreset }: AiAssistantProps) => {
   const [prompt, setPrompt] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
@@ -74,8 +72,8 @@ const AiAssistant = ({
         <h3 className="text-md font-bold text-purple-300">AI Launch Curve Assistant</h3>
       </div>
       <p className="text-xs text-slate-400 mb-3">
-        Describe your token idea (e.g., "A viral meme token" or "Real estate liquidity pool") and AI
-        will pick the curve.
+        Describe your token idea (e.g., &quot;A viral meme token&quot; or &quot;Real estate
+        liquidity pool&quot;) and AI will pick the curve.
       </p>
 
       <div className="flex gap-2">
@@ -145,10 +143,12 @@ const PRESETS_DATA: Record<string, Preset> = {
 export default function Home() {
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
 
-  const handleSelectPreset = (
-    preset: Omit<Preset, 'curveType'> & { curveType: string }
-  ): void => {
-    if (preset.curveType === 'linear' || preset.curveType === 'exponential' || preset.curveType === 'rwa') {
+  const handleSelectPreset = (preset: Omit<Preset, 'curveType'> & { curveType: string }): void => {
+    if (
+      preset.curveType === 'linear' ||
+      preset.curveType === 'exponential' ||
+      preset.curveType === 'rwa'
+    ) {
       setSelectedPreset({ ...preset, curveType: preset.curveType });
     }
   };
@@ -185,7 +185,7 @@ export default function Home() {
         <PresetMarketplace onSelectPreset={handleSelectPreset} />
 
         {/* Visualizer & Configurator Section */}
-        <CurveVisualizer activePreset={selectedPreset} />
+        <CurveVisualizer activePreset={selectedPreset || undefined} />
       </div>
     </main>
   );

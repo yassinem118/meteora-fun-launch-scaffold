@@ -1,4 +1,4 @@
- import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 
 // Meteora DBC Program IDs on Devnet
 export const METEORA_DBC_PROGRAM_ID = new PublicKey(
