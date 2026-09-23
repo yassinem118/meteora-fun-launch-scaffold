@@ -1,6 +1,8 @@
 ---
 name: meteora
-description:
+description: "Do anything on Meteora, Solana liquidity layer: launch tokens on Dynamic Bonding Curves (DBC), create and manage DAMM v1/v2 and DLMM pools, and write TypeScript against Meteora SDKs."
+license: MIT
+---
   "Do anything on Meteora, Solana's liquidity layer: launch tokens on Dynamic Bonding Curves (DBC),
   create and manage DAMM v1/v2 and DLMM pools, add or remove liquidity, swap, place DLMM limit
   orders, claim fees, migrate DBC pools to DAMM, run alpha and presale vaults, lock tokens on
