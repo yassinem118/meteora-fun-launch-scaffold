@@ -6,6 +6,8 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 
+// Import CSS Styles
+import '@solana/wallet-adapter-react-ui/styles.css';
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -26,4 +28,4 @@ export default function App({ Component, pageProps }: AppProps) {
       </WalletProvider>
     </ConnectionProvider>
   );
-}
+ }
