@@ -1,9 +1,8 @@
-// @ts-nocheck
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 
-// المعرفات الخاصة ببرنامج Meteora DBC على Devnet
+// Meteora DBC Program IDs on Devnet
 export const METEORA_DBC_PROGRAM_ID = new PublicKey(
-  'DBCKeyProgram111111111111111111111111111111' // المعرف الافتراضي للتجربة
+  'DBCKeyProgram111111111111111111111111111111' // Default ID for testing
 );
 
 export interface DBCConfigParams {
@@ -15,7 +14,7 @@ export interface DBCConfigParams {
 }
 
 /**
-  توليد المعاملة لإنشاء Bonding Curve على Meteora DBC
+ // Generate transaction to create Bonding Curve on Meteora DBC
  */
 export async function createBondingCurveTx(
   connection: Connection,
@@ -24,15 +23,15 @@ export async function createBondingCurveTx(
 ): Promise<{ transaction: Transaction; poolAddress: string }> {
   const transaction = new Transaction();
 
-  // حساب الـ Build Parameters بناء على اختيار المستخدم
+  // Calculate Build Parameters based on user selection
   console.log('Configuring Meteora DBC Pool with:', params);
 
-  // هنا يتم إعداد المعاملة وهيكلتها لإرسالها للـ Solana Devnet
+  // Here the transaction is prepared and structured for sending to Solana Devnet
   transaction.feePayer = walletPublicKey;
   const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
 
-  // إرجاع المعاملة الجاهزة للتوقيع
+  // Return transaction ready for signing
   return {
     transaction,
     poolAddress: PublicKey.unique().toBase58(),

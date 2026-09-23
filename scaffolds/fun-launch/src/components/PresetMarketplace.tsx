@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React from 'react';
+ import React from 'react';
 
 const PRESETS = [
   {
@@ -33,7 +32,11 @@ const PRESETS = [
   },
 ];
 
-export const PresetMarketplace = ({ onSelectPreset }) => {
+export const PresetMarketplace = ({
+  onSelectPreset,
+}: {
+  onSelectPreset: (preset: (typeof PRESETS)[number]) => void;
+}) => {
   return (
     <div className="my-8">
       <h3 className="text-xl font-bold text-white mb-2">⚡ Select Curve Preset Marketplace</h3>

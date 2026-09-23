@@ -1,5 +1,4 @@
-// @ts-nocheck
-'use client';
+ 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
@@ -14,11 +13,21 @@ import {
 } from 'recharts';
 import { createBondingCurveTx } from '../lib/meteoraDbc';
 
-export const CurveVisualizer = ({ activePreset }) => {
+type CurveType = 'exponential' | 'flat' | 'linear' | 'rwa';
+
+export const CurveVisualizer = ({
+  activePreset,
+}: {
+  activePreset?: {
+    curveType: CurveType;
+    targetLiquidity: number;
+    feePercentage: number;
+  };
+}) => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected } = useWallet();
 
-  const [curveType, setCurveType] = useState('exponential');
+  const [curveType, setCurveType] = useState<CurveType>('exponential');
   const [targetLiquidity, setTargetLiquidity] = useState(50000);
   const [feePercentage, setFeePercentage] = useState(1);
   const [tokenName, setTokenName] = useState('');
@@ -91,7 +100,7 @@ export const CurveVisualizer = ({ activePreset }) => {
     }
   };
 
-  const curveOptions = ['exponential', 'flat', 'linear', 'rwa'];
+  const curveOptions: CurveType[] = ['exponential', 'flat', 'linear', 'rwa'];
 
   return (
     <div className="p-6 bg-slate-900 text-white rounded-xl border border-slate-800 my-6 shadow-xl">

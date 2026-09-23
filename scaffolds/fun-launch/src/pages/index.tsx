@@ -1,5 +1,4 @@
-// @ts-nocheck
-import dynamic from 'next/dynamic';
+ import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 import { CurveVisualizer } from '../components/CurveVisualizer';
 import { PresetMarketplace } from '../components/PresetMarketplace';
@@ -9,11 +8,27 @@ const WalletMultiButton = dynamic(
   { ssr: false }
 );
 
+interface AiAssistantProps {
+  onSelectPreset: (presetKey: string) => void;
+}
+
+interface Preset {
+  id: string;
+  title: string;
+  description: string;
+  curveType: 'linear' | 'exponential' | 'rwa';
+  targetLiquidity: number;
+  feePercentage: number;
+  tag: string;
+}
+
 // Inline AI Assistant Component
-const AiAssistant = ({ onSelectPreset }) => {
-  const [prompt, setPrompt] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [suggestion, setSuggestion] = useState(null);
+const AiAssistant = ({
+  onSelectPreset,
+}: AiAssistantProps) => {
+  const [prompt, setPrompt] = useState<string>('');
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
 
   const handleAnalyze = () => {
     if (!prompt.trim()) return;
@@ -22,8 +37,8 @@ const AiAssistant = ({ onSelectPreset }) => {
 
     setTimeout(() => {
       const text = prompt.toLowerCase();
-      let chosenPreset = 'steady';
-      let explanation = '';
+      let chosenPreset: string = 'steady';
+      let explanation: string = '';
 
       if (
         text.includes('meme') ||
@@ -95,7 +110,7 @@ const AiAssistant = ({ onSelectPreset }) => {
   );
 };
 
-const PRESETS_DATA = {
+const PRESETS_DATA: Record<string, Preset> = {
   meme: {
     id: 'meme',
     title: '🔥 Meme Launch',
@@ -128,13 +143,17 @@ const PRESETS_DATA = {
 };
 
 export default function Home() {
-  const [selectedPreset, setSelectedPreset] = useState(null);
+  const [selectedPreset, setSelectedPreset] = useState<Preset | null>(null);
 
-  const handleSelectPreset = (preset) => {
-    setSelectedPreset(preset);
+  const handleSelectPreset = (
+    preset: Omit<Preset, 'curveType'> & { curveType: string }
+  ): void => {
+    if (preset.curveType === 'linear' || preset.curveType === 'exponential' || preset.curveType === 'rwa') {
+      setSelectedPreset({ ...preset, curveType: preset.curveType });
+    }
   };
 
-  const handleAiPresetSelect = (presetKey) => {
+  const handleAiPresetSelect = (presetKey: string): void => {
     if (PRESETS_DATA[presetKey]) {
       setSelectedPreset(PRESETS_DATA[presetKey]);
     }
