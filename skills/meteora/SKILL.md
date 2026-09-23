@@ -240,4 +240,4 @@ After every state-changing action:
 | Blockhash/timeout errors                | Raise priority fee; use a premium RPC; re-send with fresh blockhash                                                                   |
 | TypeScript won't compile against an SDK | You're likely using a pre-2026 API from model memory — check the version fences in the protocol reference                             |
 
-Full table: `references/troubleshooting.md`.
+ Full table: `references/troubleshooting.md`.
