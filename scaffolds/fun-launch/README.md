@@ -1,30 +1,37 @@
-# Fun Launch
+# 🚀 Fun Launch (Meteora Invent Edition)
 
-A platform for launching tokens with customizable price curves.
+A cutting-edge, production-ready platform for launching tokens with customizable price curves on Solana, built as part of the Meteora Invent Hackathon.
 
-## Setup
+## 📋 Table of Contents
+- [Setup](#setup)
+- [Getting R2 Credentials](#getting-r2-credentials)
+- [Getting RPC URL](#getting-rpc-url)
+- [Pool Config Key](#pool-config-key)
+- [Running the Development Server](#running-the-development-server)
+- [Deployment (Vercel)](#deployment-vercel)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
 
-1. Clone the repository
+---
 
-```bash
-git clone https://github.com/MeteoraAg/meteora-invent.git
-cd scaffolds/fun-launch
-```
+## 🛠️️ Setup
 
-2. Install dependencies
+1. **Clone the repository & navigate to the scaffold:**
+   ```bash
+   git clone [https://github.com/MeteoraAg/meteora-invent.git](https://github.com/MeteoraAg/meteora-invent.git)
+   cd scaffolds/fun-launch
+Install dependencies:
 
-```bash
+Bash
 pnpm install
-```
+Set up environment variables:
+Create a .env file in the root directory of this scaffold by copying the example file:
 
-3. Set up environment variables Create a `.env` file in the root directory with the following
-   variables:
-
-```bash
+Bash
 cp .env.example .env
-```
+Fill in the required variables:
 
-```env
+Extrait de code
 # Cloudflare R2 Storage
 R2_ACCESS_KEY_ID=your_r2_access_key_id
 R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
@@ -36,106 +43,79 @@ RPC_URL=your_rpc_url
 
 # Pool Configuration
 POOL_CONFIG_KEY=your_pool_config_key
-```
+☁️ Getting R2 Credentials
+Go to Cloudflare Dashboard
 
-### Getting R2 Credentials
+Navigate to R2
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. Navigate to R2
-3. Create a new bucket or select an existing one
-4. Go to "Manage R2 API Tokens"
-5. Create a new API token with the following permissions:
-   - Account R2 Storage: Edit
-   - Bucket: Your bucket name
-6. Copy the Access Key ID and Secret Access Key
-7. Your Account ID can be found in the Cloudflare dashboard URL or in the Account Home page
+Create a new bucket or select an existing one
 
-### Getting RPC URL
+Go to "Manage R2 API Tokens" and create a new token with:
 
-1. Get your RPC URL from any of 3rd party providers
+Account R2 Storage: Edit
 
-### Pool Config Key
+Bucket: Your specific bucket name
 
-The pool config key is used to configure the bonding curve parameters. You'll need to:
+Copy the Access Key ID, Secret Access Key, and Account ID (found in the URL or Account Home).
 
-1. Deploy your own pool config program
-2. Or use an existing pool config program
-3. Get the public key of the pool config account
+🔌 Getting RPC URL
+Get your high-performance Solana RPC URL from any third-party provider (e.g., Helius, Alchemy, QuickNode).
 
-4. Run the development server
+⚙️ Pool Config Key
+The pool config key configures the bonding curve parameters. You'll need to:
 
-```bash
+Deploy your own pool config program, or use an existing one.
+
+Get the public key of the pool config account and add it to your .env.
+
+💻 Running the Development Server
+Run the app locally in development mode:
+
+Bash
 pnpm dev
-```
+🚀 Deployment (Vercel)
+Push your code to your GitHub repository.
 
-## Deployment
+Go to Vercel and click "New Project", importing your repository.
 
-### Deploying to Vercel
+Configure your project settings carefully:
 
-1. Push your code to a GitHub repository
+Framework Preset: Next.js
 
-2. Go to [Vercel](https://vercel.com) and sign in with your GitHub account
+Root Directory: scaffolds/fun-launch (Crucial for Monorepo)
 
-3. Click "New Project"
+Build Command: pnpm build (or let Vercel handle via workspace)
 
-4. Import your GitHub repository
+Output Directory: .next
 
-5. Configure your project:
-   - Framework Preset: Next.js
-   - Root Directory: ./
-   - Build Command: `pnpm build`
-   - Output Directory: .next
+Add Environment Variables: Add all the keys from your .env file (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ACCOUNT_ID, R2_BUCKET, RPC_URL, POOL_CONFIG_KEY).
 
-6. Add Environment Variables:
-   - Add all the environment variables from your `.env` file:
-     - `R2_ACCESS_KEY_ID`
-     - `R2_SECRET_ACCESS_KEY`
-     - `R2_ACCOUNT_ID`
-     - `R2_BUCKET`
-     - `RPC_URL`
-     - `POOL_CONFIG_KEY`
+Click "Deploy"!
 
-7. Click "Deploy"
+✨ Features
+Create token pools with customizable price curves
 
-8. Vercel will automatically deploy your site and provide you with a URL
+Seamless token metadata and logo uploads via Cloudflare R2
 
-### Environment Variables in Vercel
+Real-time token statistics and interactive charts
 
-You can manage your environment variables in Vercel:
+Full transaction tracking
 
-1. Go to your project settings
-2. Click on "Environment Variables"
-3. Add each variable from your `.env` file
-4. You can set different values for Production, Preview, and Development environments
+Fully responsive mobile-friendly interface
 
-### Custom Domain (Optional)
+🧰 Tech Stack
+Framework: Next.js (App Router)
 
-1. Go to your project settings in Vercel
-2. Click on "Domains"
-3. Add your custom domain
-4. Follow Vercel's instructions to configure your DNS settings
+Language: TypeScript
 
-## Features
+Styling: Tailwind CSS
 
-- Create token pools with customizable price curves
-- Upload token metadata and logos
-- View token statistics and charts
-- Track token transactions
-- Mobile-friendly interface
+Blockchain: Solana Web3.js & Dynamic Bonding Curve SDK
 
-## Tech Stack
+Storage: Cloudflare R2
 
-- Next.js
-- TypeScript
-- Tailwind CSS
-- Solana Web3.js
-- Dynamic Bonding Curve SDK
-- Cloudflare R2 for storage
+🤝 Contributing
+Contributions, issues, and feature requests are welcome! Feel free to check out the main repository README.
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+📄 License
+ISC
