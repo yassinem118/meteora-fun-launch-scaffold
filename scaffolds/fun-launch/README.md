@@ -1,20 +1,44 @@
 # 🚀 Fun Launch (Meteora Invent Edition)
 
-A cutting-edge, production-ready platform for launching tokens with customizable price curves on Solana, built as part of the Meteora Invent Hackathon.
+A high-performance, production-grade token launchpad leveraging the official **Meteora Dynamic Bonding Curve (DBC) SDK (v1.5.13)** on Solana. Built specifically for the Meteora Invent Hackathon to enable precise curve customization, including real-world asset (RWA) step curves and meme launches.
 
 ## 📋 Table of Contents
-- [Setup](#setup)
-- [Getting R2 Credentials](#getting-r2-credentials)
-- [Getting RPC URL](#getting-rpc-url)
-- [Pool Config Key](#pool-config-key)
-- [Running the Development Server](#running-the-development-server)
-- [Deployment (Vercel)](#deployment-vercel)
-- [Features](#features)
+- [Overview & Architecture](#overview--architecture)
+- [Core Features](#core-features)
 - [Tech Stack](#tech-stack)
+- [Setup & Installation](#setup--installation)
+- [Running Locally](#running-locally)
+- [Deployment](#deployment)
 
 ---
 
-## 🛠️️ Setup
+## 🏛️ Overview & Architecture
+
+Fun Launch moves away from static simulations to provide **true on-chain integration** with Meteora’s Dynamic Bonding Curve protocol (`dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN`). 
+
+Every preset dynamically computes 16-point liquidity weights via `buildCurveWithLiquidityWeights` and renders real-time charts derived directly from the program's sqrt price formulas (`summarizeCurve`), ensuring exact parity between UI visualization and on-chain execution.
+
+## ✨ Core Features
+
+- **4 Real Curve Presets (SDK-Powered):**
+  - 🔥 **Meme Launch:** Steep exponential curve designed for high initial volatility and fast hype cycles.
+  - 📈 **Steady Growth:** Uniform liquidity distribution for predictable, low-risk price discovery.
+  - 🏛️ **RWA / Stock Steps:** Custom price bands with zero-liquidity steps, tailored for tokenized real-world assets and equities.
+  - ⚖️ **Flat Band:** Concentrated liquidity near the start price before sharp graduation scaling.
+- **True On-Chain Execution:** Executes two-step transactions (`createConfigAndPool`) using the official DBC SDK and generates verifiable Devnet Solscan proofs.
+- **Smart Parameter Assistant:** Intelligent rule-based parsing matching user tokenomics visions directly to optimal DBC configurations.
+- **DAMM v2 Migration Ready:** Built-in graduation threshold calculations targeting seamless transition to Meteora's DAMM v2 pools.
+
+## 🧰 Tech Stack
+
+- **Framework:** Next.js (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS & Recharts
+- **Blockchain:** Solana Web3.js, Solana Wallet Adapter & `@meteora-ag/dynamic-bonding-curve-sdk`
+
+---
+
+## 🛠️ Setup & Installation
 
 1. **Clone the repository & navigate to the scaffold:**
    ```bash
@@ -24,98 +48,32 @@ Install dependencies:
 
 Bash
 pnpm install
-Set up environment variables:
-Create a .env file in the root directory of this scaffold by copying the example file:
-
-Bash
-cp .env.example .env
-Fill in the required variables:
+Configure Environment Variables:
+Create a .env file in the root directory:
 
 Extrait de code
-# Cloudflare R2 Storage
-R2_ACCESS_KEY_ID=your_r2_access_key_id
-R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
-R2_ACCOUNT_ID=your_r2_account_id
-R2_BUCKET=your_r2_bucket_name
-
-# Solana RPC URL
-RPC_URL=your_rpc_url
-
-# Pool Configuration
-POOL_CONFIG_KEY=your_pool_config_key
-☁️ Getting R2 Credentials
-Go to Cloudflare Dashboard
-
-Navigate to R2
-
-Create a new bucket or select an existing one
-
-Go to "Manage R2 API Tokens" and create a new token with:
-
-Account R2 Storage: Edit
-
-Bucket: Your specific bucket name
-
-Copy the Access Key ID, Secret Access Key, and Account ID (found in the URL or Account Home).
-
-🔌 Getting RPC URL
-Get your high-performance Solana RPC URL from any third-party provider (e.g., Helius, Alchemy, QuickNode).
-
-⚙️ Pool Config Key
-The pool config key configures the bonding curve parameters. You'll need to:
-
-Deploy your own pool config program, or use an existing one.
-
-Get the public key of the pool config account and add it to your .env.
-
+NEXT_PUBLIC_RPC_URL=your_solana_devnet_rpc_url
 💻 Running the Development Server
-Run the app locally in development mode:
+Start the application locally in development mode:
 
 Bash
 pnpm dev
+Open http://localhost:3000 in your browser, connect your Phantom wallet (set to Devnet with test SOL), choose your curve preset, and launch your pool on-chain!
+
 🚀 Deployment (Vercel)
 Push your code to your GitHub repository.
 
-Go to Vercel and click "New Project", importing your repository.
+Import the repository into Vercel.
 
-Configure your project settings carefully:
+Configure project settings:
 
 Framework Preset: Next.js
 
-Root Directory: scaffolds/fun-launch (Crucial for Monorepo)
+Root Directory: scaffolds/fun-launch
 
-Build Command: pnpm build (or let Vercel handle via workspace)
+Build Command: pnpm build
 
-Output Directory: .next
-
-Add Environment Variables: Add all the keys from your .env file (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ACCOUNT_ID, R2_BUCKET, RPC_URL, POOL_CONFIG_KEY).
-
-Click "Deploy"!
-
-✨ Features
-Create token pools with customizable price curves
-
-Seamless token metadata and logo uploads via Cloudflare R2
-
-Real-time token statistics and interactive charts
-
-Full transaction tracking
-
-Fully responsive mobile-friendly interface
-
-🧰 Tech Stack
-Framework: Next.js (App Router)
-
-Language: TypeScript
-
-Styling: Tailwind CSS
-
-Blockchain: Solana Web3.js & Dynamic Bonding Curve SDK
-
-Storage: Cloudflare R2
-
-🤝 Contributing
-Contributions, issues, and feature requests are welcome! Feel free to check out the main repository README.
+Add your environment variables and click Deploy.
 
 📄 License
 ISC
