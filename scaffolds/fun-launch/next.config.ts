@@ -1,14 +1,22 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig: import('next').NextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
+  // Set Turbopack root explicitly to silence workspace warnings
+  turbopack: {
+    root: '.',
   },
-  typescript: {
-    ignoreBuildErrors: true,
+  // Configure webpack to handle Node.js polyfills correctly on the client side
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
+    return config;
   },
 };
 
-export default nextConfig;
+ export default nextConfig;

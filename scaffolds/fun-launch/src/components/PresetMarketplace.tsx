@@ -1,33 +1,34 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, type CSSProperties } from 'react';
 import { PRESETS, buildConfig, summarizeCurve, type CurveSummary, type PresetId } from '../lib/dbc';
+import { PRESET_THEME } from '../lib/theme';
 
 interface Props {
   selectedId: PresetId;
   onSelect: (id: PresetId) => void;
 }
 
-/** Tiny SVG sparkline of the REAL curve (price vs. supply sold). */
-const Sparkline = ({ summary }: { summary: CurveSummary }) => {
-  const w = 120;
-  const h = 36;
+/** Tiny SVG sparkline of the real curve (price vs. supply sold). */
+const Sparkline = ({ summary, color }: { summary: CurveSummary; color: string }) => {
+  const w = 140;
+  const h = 40;
   const max = summary.endPrice || 1;
   const d = summary.points
     .map((p, i) => {
       const x = (p.supplyPct / 100) * w;
-      const y = h - (p.priceQuote / max) * (h - 4) - 2;
+      const y = h - (p.priceQuote / max) * (h - 6) - 3;
       return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(' ');
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
-      <path d={d} fill="none" stroke="#34d399" strokeWidth={2} />
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <path d={d} fill="none" stroke={color} strokeWidth={2.4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 };
 
 export const PresetMarketplace = ({ selectedId, onSelect }: Props) => {
-  // Every card is computed from the real DBC config, nothing is hard-coded.
-  const cards = useMemo(
+  // Every tile is computed from the real DBC config, nothing is hard-coded.
+  const tiles = useMemo(
     () =>
       PRESETS.map((preset) => {
         try {
@@ -40,57 +41,47 @@ export const PresetMarketplace = ({ selectedId, onSelect }: Props) => {
   );
 
   return (
-    <section>
-      <h2 className="mb-1 text-xl font-bold text-white">Curve presets</h2>
-      <p className="mb-4 text-sm text-slate-400">
-        Each preset is a real Meteora DBC config built with the SDK. Pick one, then fine-tune it
-        below.
-      </p>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {cards.map(({ preset, summary, error }) => {
-          const active = preset.id === selectedId;
-          return (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => onSelect(preset.id)}
-              aria-pressed={active}
-              className={`flex flex-col justify-between rounded-xl border p-4 text-left transition-all ${
-                active
-                  ? 'border-emerald-400 bg-emerald-500/10'
-                  : 'border-slate-800 bg-slate-900 hover:border-emerald-500/50'
-              }`}
-            >
+    <div className="fl-tiles" role="group" aria-label="Curve presets">
+      {tiles.map(({ preset, summary, error }) => {
+        const theme = PRESET_THEME[preset.id];
+        const active = preset.id === selectedId;
+        const fee = preset.antiSnipe
+          ? `${preset.antiSnipe.startBps / 100}% to ${preset.feeBps / 100}%`
+          : `${(preset.feeBps / 100).toFixed(2)}%`;
+        return (
+          <button
+            key={preset.id}
+            type="button"
+            onClick={() => onSelect(preset.id)}
+            aria-pressed={active}
+            className={`fl-tile${active ? ' is-active' : ''}`}
+            style={{ '--a': theme.accent } as CSSProperties}
+          >
+            <div className="fl-tile-top">
+              <h3 className="fl-tile-title">{preset.title}</h3>
+              <span className="fl-pill">{preset.tag}</span>
+            </div>
+            <p>{preset.description}</p>
+            {summary ? (
               <div>
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <h3 className="font-bold text-emerald-300">{preset.title}</h3>
-                  <span className="rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
-                    {preset.tag}
+                <Sparkline summary={summary} color={theme.accent} />
+                <div className="fl-tile-foot">
+                  <span>
+                    Graduates at
+                    <strong>{summary.graduationQuote.toFixed(2)} SOL</strong>
+                  </span>
+                  <span>
+                    Fee
+                    <strong>{fee}</strong>
                   </span>
                 </div>
-                <p className="mb-3 text-xs leading-relaxed text-slate-400">{preset.description}</p>
               </div>
-
-              {summary ? (
-                <div>
-                  <Sparkline summary={summary} />
-                  <div className="mt-2 flex justify-between border-t border-slate-800 pt-2 text-xs text-slate-300">
-                    <span>
-                      Graduates at <strong>{summary.graduationQuote.toFixed(2)} SOL</strong>
-                    </span>
-                    <span>
-                      Fee <strong>{(preset.feeBps / 100).toFixed(2)}%</strong>
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-red-400">{error}</p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </section>
+            ) : (
+              <p style={{ color: 'var(--danger)' }}>{error}</p>
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 };

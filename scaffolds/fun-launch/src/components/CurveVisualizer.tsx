@@ -5,9 +5,9 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, type Keypair, type Transaction } from '@solana/web3.js';
 import { deriveDbcPoolAddress, getTokenDecimals } from '@meteora-ag/dynamic-bonding-curve-sdk';
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,6 +25,7 @@ import {
   type QuoteToken,
 } from '../lib/dbc';
 import { buildShareQuery, type ShareParams } from '../lib/share';
+import { PRESET_THEME } from '../lib/theme';
 
 const CLUSTER = 'devnet';
 const solscan = (kind: 'tx' | 'token' | 'account', id: string) =>
@@ -45,6 +46,7 @@ export const CurveVisualizer = ({
   initial?: ShareParams;
 }) => {
   const preset = getPreset(presetId);
+  const theme = PRESET_THEME[presetId];
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
 
@@ -216,218 +218,220 @@ export const CurveVisualizer = ({
     }
   };
 
-  const input =
-    'w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white focus:border-emerald-500 focus:outline-none';
-  const label = 'mb-1 block text-xs font-medium text-slate-400';
+  const feeText = startFeePct > feePct && snipeSeconds > 0 ? `${startFeePct}% to ${feePct}%` : `${feePct}%`;
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-xl font-bold text-emerald-400">{preset.title}: curve &amp; launch</h2>
-          <p className="text-sm text-slate-400">
-            Chart computed from the same DBC config that is sent on-chain ({CLUSTER}).
+    <div className="fl-bench">
+      <div className="fl-sticky">
+        <section className="fl-card" aria-label="Curve preview">
+          <h2 className="fl-mood">{theme.mood}</h2>
+          <p className="fl-sub">
+            {preset.title}: market cap as the curve sells out. This is the exact config sent on-chain ({CLUSTER}).
           </p>
-        </div>
-        {summary && (
-          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
-            Graduates to DAMM v2 at {summary.graduationQuote.toFixed(2)} {quote?.symbol} raised
-          </span>
-        )}
-      </div>
 
-      <div className="mb-6 h-72 w-full rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        {summary ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis
-                dataKey="supply"
-                type="number"
-                domain={[0, 100]}
-                unit="%"
-                stroke="#94a3b8"
-                label={{ value: 'Curve supply sold', position: 'insideBottom', offset: -4, fill: '#94a3b8', fontSize: 11 }}
-              />
-              <YAxis
-                stroke="#94a3b8"
-                tickFormatter={(v: number) => v.toFixed(1)}
-                label={{ value: `Market cap (${quote?.symbol ?? ''})`, angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11 }}
-              />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }}
-                formatter={(v) => [`${Number(v).toFixed(3)} ${quote?.symbol ?? ''}`, 'Market cap']}
-                labelFormatter={(v) => `${v}% of curve supply sold`}
-              />
-              <Line type="linear" dataKey="marketCap" stroke="#10b981" strokeWidth={3} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-red-400">{configError}</div>
-        )}
-      </div>
-
-      <div className="mb-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-        <label className={label}>Quote token (what the token is paired against)</label>
-        <div className="mb-2 flex gap-2">
-          {(['sol', 'custom'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setQuoteMode(m)}
-              aria-pressed={quoteMode === m}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                quoteMode === m
-                  ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300'
-                  : 'border-slate-700 text-slate-300 hover:border-emerald-500/50'
-              }`}
-            >
-              {m === 'sol' ? 'SOL' : 'Custom SPL mint (USDC, xStock...)'}
-            </button>
-          ))}
-        </div>
-        {quoteMode === 'custom' && (
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <input
-              type="text"
-              placeholder="Quote mint address"
-              value={quoteMintInput}
-              onChange={(e) => setQuoteMintInput(e.target.value)}
-              className={`${input} md:col-span-2`}
-            />
-            <input
-              type="text"
-              maxLength={10}
-              placeholder="Symbol (e.g. USDC)"
-              value={quoteSymbol}
-              onChange={(e) => setQuoteSymbol(e.target.value)}
-              className={input}
-            />
-            {customQuote && (
-              <p className="text-xs text-emerald-300 md:col-span-3">
-                Mint found: {customQuote.decimals} decimals.
-              </p>
+          <div className="fl-chart-wrap">
+            {summary ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ left: 4, right: 12, top: 10, bottom: 4 }}>
+                  <defs>
+                    <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={theme.accent} stopOpacity={0.45} />
+                      <stop offset="100%" stopColor={theme.accent} stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={theme.accent} />
+                      <stop offset="100%" stopColor={theme.accent2} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#2B3556" strokeDasharray="2 6" vertical={false} />
+                  <XAxis
+                    dataKey="supply"
+                    type="number"
+                    domain={[0, 100]}
+                    unit="%"
+                    stroke="#9AA5C8"
+                    tickLine={false}
+                    label={{ value: 'Curve supply sold', position: 'insideBottom', offset: -2, fill: '#9AA5C8', fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="#9AA5C8"
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v: number) => v.toFixed(1)}
+                    width={44}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#171E36', border: '1px solid #2B3556', borderRadius: 10 }}
+                    labelStyle={{ color: '#9AA5C8' }}
+                    itemStyle={{ color: '#EEF1FA' }}
+                    formatter={(v) => [`${Number(v).toFixed(3)} ${quote?.symbol ?? ''}`, 'Market cap']}
+                    labelFormatter={(v) => `${v}% of curve supply sold`}
+                  />
+                  <Area
+                    type="linear"
+                    dataKey="marketCap"
+                    stroke="url(#curveStroke)"
+                    strokeWidth={3}
+                    fill="url(#curveFill)"
+                    dot={false}
+                    activeDot={{ r: 5, fill: theme.accent2, stroke: '#0F1424', strokeWidth: 2 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="fl-empty" role="alert">
+                {configError}
+              </div>
             )}
-            {quoteError && <p className="text-xs text-red-400 md:col-span-3">{quoteError}</p>}
           </div>
-        )}
+
+          {summary && (
+            <div className="fl-stats">
+              <div className="fl-stat">
+                <span>Starts at</span>
+                <strong>
+                  {initialMc} {quote?.symbol}
+                </strong>
+              </div>
+              <div className="fl-stat">
+                <span>Graduates to DAMM v2 at</span>
+                <strong>
+                  {summary.graduationQuote.toFixed(2)} {quote?.symbol}
+                </strong>
+              </div>
+              <div className="fl-stat">
+                <span>Trading fee</span>
+                <strong>{feeText}</strong>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div>
-          <label className={label}>Initial market cap ({quote?.symbol ?? 'quote'})</label>
-          <input type="number" min={0} step="any" value={initialMc} onChange={(e) => setInitialMc(Number(e.target.value))} className={input} />
-        </div>
-        <div>
-          <label className={label}>Migration market cap ({quote?.symbol ?? 'quote'})</label>
-          <input type="number" min={0} step="any" value={migrationMc} onChange={(e) => setMigrationMc(Number(e.target.value))} className={input} />
-        </div>
-        <div>
-          <label className={label}>Trading fee (%)</label>
-          <input type="number" min={0.25} max={99} step="0.05" value={feePct} onChange={(e) => setFeePct(Number(e.target.value))} className={input} />
-        </div>
-      </div>
-
-      <div className="mb-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-        <p className="mb-2 text-xs font-medium text-slate-400">
-          Anti-sniper fee decay (protects thin or newly tokenized launches)
-        </p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className={label}>Starting fee (%)</label>
-            <input type="number" min={0.25} max={99} step="0.05" value={startFeePct} onChange={(e) => setStartFeePct(Number(e.target.value))} className={input} />
+      <div>
+        <section className="fl-card">
+          <h3 className="fl-group-title">Pair with</h3>
+          <p className="fl-hint">The asset buyers pay with. Use a custom mint for stablecoins or tokenized stocks.</p>
+          <div className="fl-seg" role="group" aria-label="Quote token">
+            {(['sol', 'custom'] as const).map((m) => (
+              <button key={m} type="button" onClick={() => setQuoteMode(m)} aria-pressed={quoteMode === m}>
+                {m === 'sol' ? 'SOL' : 'Custom SPL mint'}
+              </button>
+            ))}
           </div>
-          <div>
-            <label className={label}>Decay duration (seconds, 0 = off)</label>
-            <input type="number" min={0} max={86400} step="10" value={snipeSeconds} onChange={(e) => setSnipeSeconds(Number(e.target.value))} className={input} />
+          {quoteMode === 'custom' && (
+            <div className="fl-grid2">
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label className="fl-label" htmlFor="quote-mint">Quote mint address</label>
+                <input id="quote-mint" type="text" className="fl-input" value={quoteMintInput} onChange={(e) => setQuoteMintInput(e.target.value)} />
+              </div>
+              <div>
+                <label className="fl-label" htmlFor="quote-symbol">Symbol</label>
+                <input id="quote-symbol" type="text" maxLength={10} placeholder="USDC" className="fl-input" value={quoteSymbol} onChange={(e) => setQuoteSymbol(e.target.value)} />
+              </div>
+              <div style={{ alignSelf: 'end' }}>
+                {customQuote && <p className="fl-note" style={{ margin: 0 }}>Mint found, {customQuote.decimals} decimals.</p>}
+                {quoteError && <p className="fl-note" style={{ margin: 0, color: 'var(--danger)' }}>{quoteError}</p>}
+              </div>
+            </div>
+          )}
+
+          <div className="fl-grid2" style={{ marginTop: 14 }}>
+            <div>
+              <label className="fl-label" htmlFor="init-mc">Initial market cap ({quote?.symbol ?? 'quote'})</label>
+              <input id="init-mc" type="number" min={0} step="any" className="fl-input" value={initialMc} onChange={(e) => setInitialMc(Number(e.target.value))} />
+            </div>
+            <div>
+              <label className="fl-label" htmlFor="mig-mc">Migration market cap ({quote?.symbol ?? 'quote'})</label>
+              <input id="mig-mc" type="number" min={0} step="any" className="fl-input" value={migrationMc} onChange={(e) => setMigrationMc(Number(e.target.value))} />
+            </div>
           </div>
-        </div>
-        <p className="mt-2 text-xs text-slate-500">
-          {startFeePct > feePct && snipeSeconds > 0
-            ? `Fee starts at ${startFeePct}% and decays linearly to ${feePct}% over about ${snipeSeconds}s (slot-based, 10 steps).`
-            : `Flat ${feePct}% fee (no decay).`}{' '}
-          After graduation, liquidity migrates to DAMM v2 and is permanently locked.
-        </p>
+        </section>
+
+        <section className="fl-card">
+          <h3 className="fl-group-title">Fees</h3>
+          <p className="fl-hint">A high opening fee that decays protects thin or newly tokenized launches from snipers.</p>
+          <div className="fl-grid2">
+            <div>
+              <label className="fl-label" htmlFor="fee">Steady fee (%)</label>
+              <input id="fee" type="number" min={0.25} max={99} step="0.05" className="fl-input" value={feePct} onChange={(e) => setFeePct(Number(e.target.value))} />
+            </div>
+            <div>
+              <label className="fl-label" htmlFor="fee-start">Opening fee (%)</label>
+              <input id="fee-start" type="number" min={0.25} max={99} step="0.05" className="fl-input" value={startFeePct} onChange={(e) => setStartFeePct(Number(e.target.value))} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="fl-label" htmlFor="fee-secs">Decay time in seconds (0 turns it off)</label>
+              <input id="fee-secs" type="number" min={0} max={86400} step="10" className="fl-input" value={snipeSeconds} onChange={(e) => setSnipeSeconds(Number(e.target.value))} />
+            </div>
+          </div>
+          <p className="fl-note">
+            {startFeePct > feePct && snipeSeconds > 0
+              ? `Starts at ${startFeePct}% and falls to ${feePct}% in 10 steps over about ${snipeSeconds}s (slot-based).`
+              : `Flat ${feePct}% fee, no decay.`}{' '}
+            After graduation, liquidity moves to DAMM v2 and stays locked.
+          </p>
+        </section>
+
+        <section className="fl-card">
+          <h3 className="fl-group-title">Your token</h3>
+          <div className="fl-grid2" style={{ marginTop: 10 }}>
+            <div>
+              <label className="fl-label" htmlFor="tk-name">Name</label>
+              <input id="tk-name" type="text" maxLength={32} placeholder="Tokenized Apple" className="fl-input" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div>
+              <label className="fl-label" htmlFor="tk-sym">Symbol</label>
+              <input id="tk-sym" type="text" maxLength={10} placeholder="tAAPL" className="fl-input" value={symbol} onChange={(e) => setSymbol(e.target.value)} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="fl-label" htmlFor="tk-desc">Description (optional)</label>
+              <input id="tk-desc" type="text" maxLength={120} className="fl-input" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+          </div>
+
+          <button type="button" onClick={handleLaunch} disabled={loading || !summary} className="fl-btn fl-btn-primary" style={{ marginTop: 16 }}>
+            {loading ? step || 'Working...' : `Launch token on ${CLUSTER}`}
+          </button>
+
+          {error && (
+            <p role="alert" className="fl-error">
+              {error}
+            </p>
+          )}
+
+          {result && (
+            <div className="fl-success" role="status">
+              <p><strong>Pool created on-chain.</strong></p>
+              <p>
+                Transaction:{' '}
+                <a href={solscan('tx', result.signature)} target="_blank" rel="noreferrer">{short(result.signature)}</a>
+              </p>
+              <p>
+                Token mint:{' '}
+                <a href={solscan('token', result.mint)} target="_blank" rel="noreferrer">{short(result.mint)}</a>
+              </p>
+              <p>
+                DBC pool:{' '}
+                <a href={solscan('account', result.pool)} target="_blank" rel="noreferrer">{short(result.pool)}</a>
+              </p>
+              <p>
+                <a href={`/trade?mint=${result.mint}`}><strong>Open the trade page for this token</strong></a>
+              </p>
+            </div>
+          )}
+
+          <div className="fl-share">
+            <button type="button" onClick={handleShare} disabled={!summary} className="fl-btn fl-btn-ghost">
+              Copy link to this config
+            </button>
+            {shareUrl && (
+              <input readOnly value={shareUrl} aria-label="Shareable link" onFocus={(e) => e.currentTarget.select()} className="fl-input" />
+            )}
+          </div>
+        </section>
       </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label className={label}>Token name</label>
-          <input type="text" maxLength={32} placeholder="e.g. Tokenized Apple" value={name} onChange={(e) => setName(e.target.value)} className={input} />
-        </div>
-        <div>
-          <label className={label}>Token symbol</label>
-          <input type="text" maxLength={10} placeholder="e.g. tAAPL" value={symbol} onChange={(e) => setSymbol(e.target.value)} className={input} />
-        </div>
-        <div className="md:col-span-2">
-          <label className={label}>Description (optional)</label>
-          <input type="text" maxLength={120} value={description} onChange={(e) => setDescription(e.target.value)} className={input} />
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleLaunch}
-        disabled={loading || !summary}
-        className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 font-bold text-slate-950 transition-all hover:from-emerald-600 hover:to-cyan-600 disabled:opacity-50"
-      >
-        {loading ? step || 'Working...' : `Launch on Meteora DBC (${CLUSTER})`}
-      </button>
-
-      <div className="mt-3">
-        <button
-          type="button"
-          onClick={handleShare}
-          disabled={!summary}
-          className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-emerald-500/50 disabled:opacity-50"
-        >
-          Copy shareable link to this config
-        </button>
-        {shareUrl && (
-          <input
-            readOnly
-            value={shareUrl}
-            onFocus={(e) => e.currentTarget.select()}
-            className="mt-2 w-full rounded border border-slate-700 bg-slate-950 p-2 text-xs text-slate-300"
-          />
-        )}
-      </div>
-
-      {error && (
-        <p role="alert" className="mt-4 rounded border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
-          {error}
-        </p>
-      )}
-
-      {result && (
-        <div className="mt-4 space-y-1 rounded border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
-          <p className="font-semibold">Pool created on-chain.</p>
-          <p>
-            Transaction:{' '}
-            <a className="underline" href={solscan('tx', result.signature)} target="_blank" rel="noreferrer">
-              {short(result.signature)}
-            </a>
-          </p>
-          <p>
-            Token mint:{' '}
-            <a className="underline" href={solscan('token', result.mint)} target="_blank" rel="noreferrer">
-              {short(result.mint)}
-            </a>
-          </p>
-          <p>
-            <a className="font-semibold underline" href={`/trade?mint=${result.mint}`}>
-              Open the trade page for this token
-            </a>
-          </p>
-          <p>
-            DBC pool:{' '}
-            <a className="underline" href={solscan('account', result.pool)} target="_blank" rel="noreferrer">
-              {short(result.pool)}
-            </a>
-          </p>
-        </div>
-      )}
-    </section>
+    </div>
   );
 };
 

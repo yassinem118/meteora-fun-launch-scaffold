@@ -1,17 +1,11 @@
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { CurveVisualizer } from '../components/CurveVisualizer';
 import { PresetAdvisor } from '../components/PresetAdvisor';
 import { PresetMarketplace } from '../components/PresetMarketplace';
+import { Shell } from '../components/Shell';
 import type { PresetId } from '../lib/dbc';
 import { parseShareParams, type ShareParams } from '../lib/share';
-
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-);
 
 export default function Home() {
   const router = useRouter();
@@ -31,29 +25,29 @@ export default function Home() {
   }, [router.isReady, router.query]);
 
   return (
-    <main className="min-h-screen bg-slate-950 p-8 text-white">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <header className="flex flex-col items-center justify-between gap-4 border-b border-slate-800 pb-6 md:flex-row">
-          <div className="text-center md:text-left">
-            <h1 className="mb-2 bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-500 bg-clip-text text-4xl font-extrabold text-transparent">
-              Fun Launch
-            </h1>
-            <p className="text-slate-400">
-              Launch tokens on Meteora Dynamic Bonding Curve with curve presets built for memes, utility and tokenized stocks.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/trade" className="text-sm font-semibold text-emerald-400 underline">
-              Trade
-            </Link>
-            <WalletMultiButton />
-          </div>
-        </header>
+    <Shell presetId={presetId}>
+      <section className="fl-hero">
+        <h1>Launch a token on a curve you designed</h1>
+        <p>
+          Choose how the price climbs, how fees protect early buyers, and what the token trades against.
+          When the curve sells out, the pool moves to Meteora DAMM v2 with its liquidity locked.
+        </p>
+      </section>
 
-        <PresetAdvisor onPick={setPresetId} />
+      <section className="fl-section" aria-labelledby="pick-curve">
+        <div className="fl-section-head">
+          <div>
+            <h2 className="fl-h2" id="pick-curve">Pick a curve</h2>
+            <p className="fl-sub">Every preset is a real Meteora DBC config. The page takes on its colour.</p>
+          </div>
+          <PresetAdvisor onPick={setPresetId} />
+        </div>
         <PresetMarketplace selectedId={presetId} onSelect={setPresetId} />
+      </section>
+
+      <section className="fl-section" aria-label="Shape and launch" style={{ paddingBottom: 60 }}>
         {ready && <CurveVisualizer key={shared ? 'shared' : 'default'} presetId={presetId} initial={shared} />}
-      </div>
-    </main>
+      </section>
+    </Shell>
   );
 }

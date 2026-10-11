@@ -1,10 +1,10 @@
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
+import { Shell } from '../components/Shell';
 import {
   DynamicBondingCurveClient,
   getCurrentPoint,
@@ -13,11 +13,6 @@ import {
   type PoolConfig,
   type VirtualPool,
 } from '@meteora-ag/dynamic-bonding-curve-sdk';
-
-const WalletMultiButton = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-);
 
 const CLUSTER = 'devnet';
 const SLIPPAGE_BPS = 100;
@@ -180,135 +175,114 @@ export default function Trade() {
     }
   };
 
-  const input =
-    'w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white focus:border-emerald-500 focus:outline-none';
-
   return (
-    <main className="min-h-screen bg-slate-950 p-8 text-white">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <header className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <Link href="/" className="text-sm text-emerald-400 underline">
-            Back to launcher
-          </Link>
-          <WalletMultiButton />
-        </header>
+    <Shell presetId="steady" narrow>
+      <section className="fl-hero" style={{ paddingBottom: 12 }}>
+        <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)' }}>Trade a launched token</h1>
+        <p>
+          Paste the token mint to see how close it is to graduating, then buy or sell along its curve.{' '}
+          <Link href="/">Launch a new one</Link>
+        </p>
+      </section>
 
-        <h1 className="text-2xl font-bold text-emerald-400">Trade a DBC token</h1>
+      <div className="fl-advisor" style={{ width: '100%', marginBottom: 14 }}>
+        <input
+          type="text"
+          placeholder="Token mint address"
+          aria-label="Token mint address"
+          value={mintInput}
+          onChange={(e) => setMintInput(e.target.value)}
+          className="fl-input"
+        />
+        <button type="button" onClick={() => load(mintInput)} disabled={loading || !mintInput.trim()} className="fl-btn fl-btn-small">
+          {loading ? 'Loading...' : 'Load'}
+        </button>
+      </div>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Token mint address"
-            value={mintInput}
-            onChange={(e) => setMintInput(e.target.value)}
-            className={input}
-          />
-          <button
-            type="button"
-            onClick={() => load(mintInput)}
-            disabled={loading || !mintInput.trim()}
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
-          >
-            {loading ? 'Loading...' : 'Load'}
-          </button>
-        </div>
+      {loadError && (
+        <p role="alert" className="fl-error">
+          {loadError}
+        </p>
+      )}
 
-        {loadError && (
-          <p role="alert" className="rounded border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
-            {loadError}
-          </p>
-        )}
+      {view && stats && (
+        <>
+          <section className="fl-card" aria-label="Graduation progress">
+            <div className="fl-row">
+              <h2 className="fl-group-title" style={{ margin: 0 }}>Progress to graduation</h2>
+              <span className="fl-big">{stats.pct.toFixed(1)}%</span>
+            </div>
+            <div className="fl-progress" role="progressbar" aria-valuenow={Math.round(stats.pct)} aria-valuemin={0} aria-valuemax={100} style={{ marginTop: 10 }}>
+              <div style={{ width: `${stats.pct}%` }} />
+            </div>
+            <p className="fl-note">
+              {stats.raised} of {stats.threshold} raised. At 100% the pool moves to DAMM v2.
+            </p>
+            <p className="fl-note">Current price: {stats.price.toExponential(4)} per token, in quote units.</p>
+            {stats.migrated && (
+              <p className="fl-success">This pool has graduated. Trading continues on its DAMM v2 pool.</p>
+            )}
+          </section>
 
-        {view && stats && (
-          <>
-            <section className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-              <div className="mb-3 flex items-baseline justify-between">
-                <h2 className="font-semibold text-slate-200">Graduation progress</h2>
-                <span className="text-sm text-emerald-300">{stats.pct.toFixed(2)}%</span>
+          {!stats.migrated && (
+            <section className="fl-card" aria-label="Swap">
+              <div className="fl-seg" role="group" aria-label="Side" style={{ display: 'flex' }}>
+                {(['buy', 'sell'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    style={{ flex: 1, textTransform: 'capitalize' }}
+                    onClick={() => {
+                      setSide(s);
+                      setAmount('');
+                    }}
+                    aria-pressed={side === s}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
-              <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
-                <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500" style={{ width: `${stats.pct}%` }} />
-              </div>
-              <p className="mt-2 text-xs text-slate-400">
-                {stats.raised} of {stats.threshold} raised. At 100% the pool migrates to DAMM v2.
-              </p>
-              <p className="mt-1 text-xs text-slate-400">Current price: {stats.price.toExponential(4)} per token (in quote units)</p>
-              {stats.migrated && (
-                <p className="mt-2 rounded border border-purple-500/30 bg-purple-500/10 p-2 text-xs text-purple-200">
-                  This pool has graduated. Trading continues on its DAMM v2 pool.
+
+              <label className="fl-label" htmlFor="swap-amount">
+                Amount to {side === 'buy' ? 'spend (quote token)' : 'sell (token)'}
+              </label>
+              <input
+                id="swap-amount"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="fl-input"
+              />
+
+              {quote?.out && quote.min && (
+                <p className="fl-note">
+                  You receive about {fromUnits(new BN(quote.out.toString()), outDecimals)}, at least{' '}
+                  {fromUnits(new BN(quote.min.toString()), outDecimals)} with {SLIPPAGE_BPS / 100}% slippage.
+                </p>
+              )}
+              {quote?.error && <p className="fl-note" style={{ color: 'var(--danger)' }}>{quote.error}</p>}
+
+              <button
+                type="button"
+                onClick={handleSwap}
+                disabled={!publicKey || !quote?.min || swapping}
+                className="fl-btn fl-btn-primary"
+                style={{ marginTop: 16 }}
+              >
+                {!publicKey ? 'Connect a wallet to trade' : swapping ? 'Waiting for wallet...' : side === 'buy' ? 'Buy' : 'Sell'}
+              </button>
+
+              {swapMsg && (
+                <p role={swapMsg.ok ? 'status' : 'alert'} className={swapMsg.ok ? 'fl-success' : 'fl-error'} style={{ wordBreak: 'break-all' }}>
+                  {swapMsg.text}
                 </p>
               )}
             </section>
-
-            {!stats.migrated && (
-              <section className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-                <div className="mb-3 flex gap-2">
-                  {(['buy', 'sell'] as const).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => {
-                        setSide(s);
-                        setAmount('');
-                      }}
-                      aria-pressed={side === s}
-                      className={`flex-1 rounded-lg border py-2 text-sm font-semibold capitalize ${
-                        side === s
-                          ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300'
-                          : 'border-slate-700 text-slate-300'
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-
-                <label className="mb-1 block text-xs text-slate-400">
-                  Amount in ({side === 'buy' ? 'quote token' : 'token'})
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0.0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className={input}
-                />
-
-                {quote?.out && quote.min && (
-                  <p className="mt-3 text-xs text-slate-300">
-                    You receive about {fromUnits(new BN(quote.out.toString()), outDecimals)} (minimum{' '}
-                    {fromUnits(new BN(quote.min.toString()), outDecimals)} at {SLIPPAGE_BPS / 100}% slippage)
-                  </p>
-                )}
-                {quote?.error && <p className="mt-3 text-xs text-red-400">{quote.error}</p>}
-
-                <button
-                  type="button"
-                  onClick={handleSwap}
-                  disabled={!publicKey || !quote?.min || swapping}
-                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 font-bold text-slate-950 disabled:opacity-50"
-                >
-                  {!publicKey ? 'Connect wallet' : swapping ? 'Waiting for wallet...' : side === 'buy' ? 'Buy' : 'Sell'}
-                </button>
-
-                {swapMsg && (
-                  <p
-                    role={swapMsg.ok ? 'status' : 'alert'}
-                    className={`mt-3 break-all rounded border p-3 text-xs ${
-                      swapMsg.ok
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-                        : 'border-red-500/30 bg-red-500/10 text-red-300'
-                    }`}
-                  >
-                    {swapMsg.text}
-                  </p>
-                )}
-              </section>
-            )}
-          </>
-        )}
-      </div>
-    </main>
+          )}
+        </>
+      )}
+    </Shell>
   );
 }

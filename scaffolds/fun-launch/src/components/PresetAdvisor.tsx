@@ -54,34 +54,27 @@ export const PresetAdvisor = ({ onPick }: { onPick: (id: PresetId) => void }) =>
   };
 
   return (
-    <section className="rounded-xl border border-purple-500/30 bg-slate-900 p-5">
-      <h2 className="mb-1 text-lg font-bold text-purple-300">Preset advisor</h2>
-      <p className="mb-3 text-xs text-slate-400">
-        Describe your token. A transparent rule set (shown below) picks one of the {PRESETS.length} presets.
-      </p>
-      <div className="flex gap-2">
+    <div>
+      <div className="fl-advisor">
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && run()}
-          placeholder='e.g. "tokenized stock for a thinly traded company"'
-          className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-purple-500 focus:outline-none"
+          placeholder="e.g. tokenized stock"
+          aria-label="Describe your token"
+          className="fl-input"
         />
-        <button
-          type="button"
-          onClick={run}
-          className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500"
-        >
+        <button type="button" onClick={run} className="fl-btn fl-btn-small">
           Suggest
         </button>
       </div>
       {rec && (
-        <p className="mt-3 rounded border border-purple-500/30 bg-purple-950/40 p-3 text-xs text-purple-200">
+        <p className="fl-advice" role="status">
           Suggested: <strong>{getPreset(rec.id).title}</strong>. {rec.reason}
-          {rec.matched.length > 0 && <> Matched keywords: {rec.matched.join(', ')}.</>}
+          {rec.matched.length > 0 && <> Matched: {rec.matched.join(', ')}.</>}
         </p>
       )}
-    </section>
+    </div>
   );
 };
