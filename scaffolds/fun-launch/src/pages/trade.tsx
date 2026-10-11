@@ -2,14 +2,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, type Connection, type ParsedAccountData } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Shell } from '../components/Shell';
+import { KEEPER_MIN_SOL, SOL_MINT, buildMigrateTx, getMigrationStatus } from '../lib/dbc';
 import {
   DynamicBondingCurveClient,
   getCurrentPoint,
   getPriceFromSqrtPrice,
   getTokenDecimals,
+  SwapMode,
   type PoolConfig,
   type VirtualPool,
 } from '@meteora-ag/dynamic-bonding-curve-sdk';
@@ -17,6 +19,8 @@ import {
 const CLUSTER = 'devnet';
 const SLIPPAGE_BPS = 100;
 const REFRESH_MS = 10_000;
+/** Kept aside when buying with all your SOL: token account rent, wrapped SOL and fees. */
+const SOL_RESERVE_LAMPORTS = 10_000_000;
 
 interface PoolView {
   address: PublicKey;
@@ -44,6 +48,21 @@ function fromUnits(amount: BN, decimals: number, dp = 4): string {
   return `${int}.${s.slice(s.length - decimals).slice(0, dp)}`;
 }
 
+/** Full-precision decimal string without trailing zeros (used by the Max button). */
+function fromUnitsTrim(amount: BN, decimals: number): string {
+  const full = fromUnits(amount, decimals, decimals);
+  return full.includes('.') ? full.replace(/\.?0+$/, '') || '0' : full;
+}
+
+/** Sum of all token accounts the wallet holds for a mint. */
+async function tokenBalance(connection: Connection, owner: PublicKey, mint: PublicKey): Promise<BN> {
+  const res = await connection.getParsedTokenAccountsByOwner(owner, { mint });
+  return res.value.reduce((sum, acc) => {
+    const info = (acc.account.data as ParsedAccountData).parsed?.info;
+    return sum.add(new BN(info?.tokenAmount?.amount ?? '0'));
+  }, new BN(0));
+}
+
 export default function Trade() {
   const router = useRouter();
   const { connection } = useConnection();
@@ -58,6 +77,9 @@ export default function Trade() {
   const [amount, setAmount] = useState('');
   const [swapping, setSwapping] = useState(false);
   const [swapMsg, setSwapMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [balances, setBalances] = useState<{ base: BN; quote: BN } | null>(null);
+  const [migrating, setMigrating] = useState(false);
+  const [migrateMsg, setMigrateMsg] = useState<{ ok: boolean; text: string; dammPool?: string } | null>(null);
 
   const client = useMemo(() => DynamicBondingCurveClient.create(connection, 'confirmed'), [connection]);
 
@@ -106,18 +128,46 @@ export default function Trade() {
     return () => clearInterval(id);
   }, [view, load]);
 
+  // Wallet balances, refreshed with the pool (every REFRESH_MS) and after swaps.
+  useEffect(() => {
+    if (!view || !publicKey) {
+      setBalances(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [base, quote] = await Promise.all([
+          tokenBalance(connection, publicKey, view.pool.poolState.baseMint),
+          view.quoteMint.equals(SOL_MINT)
+            ? connection.getBalance(publicKey).then((n) => new BN(n))
+            : tokenBalance(connection, publicKey, view.quoteMint),
+        ]);
+        if (!cancelled) setBalances({ base, quote });
+      } catch {
+        if (!cancelled) setBalances(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [view, publicKey, connection]);
+
   const stats = useMemo(() => {
     if (!view) return null;
     const raised = new BN(view.pool.poolState.quoteReserve.toString());
     const threshold = new BN(view.config.migrationQuoteThreshold.toString());
     const pct = threshold.isZero() ? 0 : Math.min(100, raised.muln(10000).div(threshold).toNumber() / 100);
     const price = getPriceFromSqrtPrice(view.pool.poolState.sqrtPrice, view.baseDecimals, view.quoteDecimals);
+    const thresholdNum = Number(threshold.toString()) / 10 ** view.quoteDecimals;
     return {
       raised: fromUnits(raised, view.quoteDecimals),
       threshold: fromUnits(threshold, view.quoteDecimals),
       pct,
       price: price.toNumber(),
-      migrated: Number(view.pool.poolState.isMigrated) > 0,
+      status: getMigrationStatus(view.pool, view.config),
+      // Meteora's mainnet keepers skip SOL pools below this threshold, so they need a manual migration.
+      belowKeeperMin: view.quoteMint.equals(SOL_MINT) && thresholdNum < KEEPER_MIN_SOL,
     };
   }, [view]);
 
@@ -130,19 +180,24 @@ export default function Trade() {
     const amountIn = toUnits(amount, inDecimals);
     if (!amountIn) return null;
     try {
-      const q = client.pool.swapQuote({
+      const base = {
         virtualPool: view.pool,
         config: view.config,
         swapBaseForQuote: side === 'sell',
-        amountIn,
         slippageBps: SLIPPAGE_BPS,
         hasReferral: false,
         eligibleForFirstSwapWithMinFee: false,
         currentPoint: view.currentPoint,
-      });
-      return { amountIn, out: q.outputAmount, min: q.minimumAmountOut, error: null as string | null };
+        amountIn,
+      };
+      // Buys use PartialFill so a final buy that crosses the threshold fills what it can and refunds the rest.
+      const q =
+        side === 'buy'
+          ? client.pool.swapQuote2({ ...base, swapMode: SwapMode.PartialFill })
+          : client.pool.swapQuote2({ ...base, swapMode: SwapMode.ExactIn });
+      return { amountIn, out: q.outputAmount, min: q.minimumAmountOut, left: q.amountLeft, error: null as string | null };
     } catch (e) {
-      return { amountIn, out: null, min: null, error: e instanceof Error ? e.message : 'Quote failed' };
+      return { amountIn, out: null, min: null, left: null, error: e instanceof Error ? e.message : 'Quote failed' };
     }
   }, [view, amount, side, inDecimals, client]);
 
@@ -151,7 +206,7 @@ export default function Trade() {
     if (!publicKey || !view || !quote || !quote.min) return;
     try {
       setSwapping(true);
-      const tx = await client.pool.swap({
+      const common = {
         owner: publicKey,
         pool: view.address,
         amountIn: quote.amountIn,
@@ -159,7 +214,11 @@ export default function Trade() {
         swapBaseForQuote: side === 'sell',
         referralTokenAccount: null,
         payer: publicKey,
-      });
+      };
+      const tx =
+        side === 'buy'
+          ? await client.pool.swap2({ ...common, swapMode: SwapMode.PartialFill })
+          : await client.pool.swap2({ ...common, swapMode: SwapMode.ExactIn });
       const signature = await sendTransaction(tx, connection);
       const latest = await connection.getLatestBlockhash('confirmed');
       const status = await connection.confirmTransaction({ signature, ...latest }, 'confirmed');
@@ -172,6 +231,46 @@ export default function Trade() {
       setSwapMsg({ ok: false, text: e instanceof Error ? e.message : 'Swap failed.' });
     } finally {
       setSwapping(false);
+    }
+  };
+
+  const handleMax = () => {
+    setSwapMsg(null);
+    if (!view || !balances) return;
+    let raw = side === 'sell' ? balances.base : balances.quote;
+    if (side === 'buy' && view.quoteMint.equals(SOL_MINT)) {
+      raw = BN.max(raw.sub(new BN(SOL_RESERVE_LAMPORTS)), new BN(0));
+    }
+    if (raw.isZero()) {
+      setSwapMsg({ ok: false, text: side === 'sell' ? 'You hold none of this token.' : 'Not enough balance to buy.' });
+      return;
+    }
+    setAmount(fromUnitsTrim(raw, inDecimals));
+  };
+
+  const handleMigrate = async () => {
+    setMigrateMsg(null);
+    if (!publicKey || !view) return;
+    try {
+      setMigrating(true);
+      const m = await buildMigrateTx({
+        connection,
+        wallet: publicKey,
+        pool: view.address,
+        config: view.config,
+        baseMint: view.pool.poolState.baseMint,
+      });
+      const signature = await sendTransaction(m.transaction, connection, { signers: m.signers });
+      const latest = await connection.getLatestBlockhash('confirmed');
+      const status = await connection.confirmTransaction({ signature, ...latest }, 'confirmed');
+      if (status.value.err) throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+      setMigrateMsg({ ok: true, text: `Migrated to DAMM v2. Transaction: ${signature}`, dammPool: m.dammPool.toBase58() });
+      await load(view.pool.poolState.baseMint.toBase58(), true);
+    } catch (e) {
+      console.error('Migration error:', e);
+      setMigrateMsg({ ok: false, text: e instanceof Error ? e.message : 'Migration failed.' });
+    } finally {
+      setMigrating(false);
     }
   };
 
@@ -216,15 +315,53 @@ export default function Trade() {
               <div style={{ width: `${stats.pct}%` }} />
             </div>
             <p className="fl-note">
-              {stats.raised} of {stats.threshold} raised. At 100% the pool moves to DAMM v2.
+              {stats.raised} of {stats.threshold} raised. At 100% the curve is complete and the pool can migrate to DAMM v2. Meteora's mainnet keepers only migrate pools with a threshold of at least {KEEPER_MIN_SOL} SOL (or 750 USDC); smaller pools, and everything on devnet, are migrated manually.
             </p>
             <p className="fl-note">Current price: {stats.price.toExponential(4)} per token, in quote units.</p>
-            {stats.migrated && (
+            {stats.status === 'migrated' && (
               <p className="fl-success">This pool has graduated. Trading continues on its DAMM v2 pool.</p>
             )}
-          </section>
+                    </section>
 
-          {!stats.migrated && (
+          {(stats.status === 'ready' || stats.status === 'needs-locker') && (
+            <section className="fl-card" aria-label="Migration">
+              <h2 className="fl-group-title">The curve is complete</h2>
+              <p className="fl-hint">
+                Trading on the bonding curve has ended. Migrating moves the liquidity into a Meteora DAMM v2 pool.
+                Anyone can trigger it, and your wallet pays the network fee.
+                {stats.belowKeeperMin && ` This pool is below the ${KEEPER_MIN_SOL} SOL keeper minimum, so it will not migrate on its own.`}
+              </p>
+              {stats.status === 'needs-locker' ? (
+                <p className="fl-error">
+                  This pool has locked vesting, which needs a createLocker step first. Use Meteora's manual migrator.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleMigrate}
+                  disabled={!publicKey || migrating}
+                  className="fl-btn fl-btn-primary"
+                >
+                  {!publicKey ? 'Connect a wallet to migrate' : migrating ? 'Waiting for wallet...' : 'Migrate to DAMM v2'}
+                </button>
+              )}
+              {migrateMsg && (
+                <p role={migrateMsg.ok ? 'status' : 'alert'} className={migrateMsg.ok ? 'fl-success' : 'fl-error'} style={{ wordBreak: 'break-all' }}>
+                  {migrateMsg.text}
+                  {migrateMsg.dammPool && (
+                    <>
+                      <br />
+                      <a href={`https://solscan.io/account/${migrateMsg.dammPool}?cluster=${CLUSTER}`} target="_blank" rel="noreferrer">
+                        View the DAMM v2 pool on Solscan
+                      </a>
+                    </>
+                  )}
+                </p>
+              )}
+            </section>
+          )}
+
+          {stats.status === 'bonding' && (
             <section className="fl-card" aria-label="Swap">
               <div className="fl-seg" role="group" aria-label="Side" style={{ display: 'flex' }}>
                 {(['buy', 'sell'] as const).map((s) => (
@@ -243,23 +380,40 @@ export default function Trade() {
                 ))}
               </div>
 
-              <label className="fl-label" htmlFor="swap-amount">
-                Amount to {side === 'buy' ? 'spend (quote token)' : 'sell (token)'}
-              </label>
-              <input
-                id="swap-amount"
-                type="text"
-                inputMode="decimal"
-                placeholder="0.0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="fl-input"
-              />
+              <div className="fl-row" style={{ marginBottom: 5 }}>
+                <label className="fl-label" htmlFor="swap-amount" style={{ margin: 0 }}>
+                  Amount to {side === 'buy' ? 'spend (quote token)' : 'sell (token)'}
+                </label>
+                {balances && (
+                  <span className="fl-note" style={{ margin: 0 }}>
+                    Balance: {fromUnits(side === 'sell' ? balances.base : balances.quote, inDecimals, 4)}
+                  </span>
+                )}
+              </div>
+              <div className="fl-advisor" style={{ width: '100%' }}>
+                <input
+                  id="swap-amount"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="fl-input"
+                />
+                <button type="button" onClick={handleMax} disabled={!publicKey || !balances} className="fl-btn fl-btn-ghost">
+                  Max
+                </button>
+              </div>
 
               {quote?.out && quote.min && (
                 <p className="fl-note">
                   You receive about {fromUnits(new BN(quote.out.toString()), outDecimals)}, at least{' '}
                   {fromUnits(new BN(quote.min.toString()), outDecimals)} with {SLIPPAGE_BPS / 100}% slippage.
+                </p>
+              )}
+              {quote?.left && !quote.left.isZero() && (
+                <p className="fl-note">
+                  This buy completes the curve. About {fromUnits(new BN(quote.left.toString()), inDecimals)} of your amount is not used.
                 </p>
               )}
               {quote?.error && <p className="fl-note" style={{ color: 'var(--danger)' }}>{quote.error}</p>}

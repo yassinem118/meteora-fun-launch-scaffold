@@ -30,7 +30,7 @@ export default function Home() {
         <h1>Launch a token on a curve you designed</h1>
         <p>
           Choose how the price climbs, how fees protect early buyers, and what the token trades against.
-          When the curve sells out, the pool moves to Meteora DAMM v2 with its liquidity locked.
+          When the curve sells out, the pool migrates to Meteora DAMM v2 with its liquidity locked.
         </p>
       </section>
 

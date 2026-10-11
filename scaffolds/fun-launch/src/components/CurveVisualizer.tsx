@@ -14,6 +14,7 @@ import {
   YAxis,
 } from 'recharts';
 import {
+  KEEPER_MIN_SOL,
   SOL_QUOTE,
   TOTAL_SUPPLY,
   buildConfig,
@@ -369,7 +370,10 @@ export const CurveVisualizer = ({
             {startFeePct > feePct && snipeSeconds > 0
               ? `Starts at ${startFeePct}% and falls to ${feePct}% in 10 steps over about ${snipeSeconds}s (slot-based).`
               : `Flat ${feePct}% fee, no decay.`}{' '}
-            After graduation, liquidity moves to DAMM v2 and stays locked.
+            When the curve completes, liquidity migrates to DAMM v2 and stays locked.
+            {quoteMode === 'sol' && summary && summary.graduationQuote < KEEPER_MIN_SOL
+              ? ` Meteora's mainnet keepers only auto-migrate pools of ${KEEPER_MIN_SOL}+ SOL, so this one needs a manual migration (the trade page has a button).`
+              : ''}
           </p>
         </section>
 

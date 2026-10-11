@@ -2,6 +2,7 @@ import {
   ActivationType,
   BaseFeeMode,
   CollectFeeMode,
+  DAMM_V2_MIGRATION_FEE_ADDRESS,
   DammV2DynamicFeeMode,
   DynamicBondingCurveClient,
   MigratedCollectFeeMode,
@@ -12,9 +13,12 @@ import {
   TokenDecimal,
   TokenType,
   buildCurveWithLiquidityWeights,
+  deriveDammV2PoolAddress,
   getDeltaAmountBaseUnsigned,
   getPriceFromSqrtPrice,
   type ConfigParameters,
+  type PoolConfig,
+  type VirtualPool,
 } from '@meteora-ag/dynamic-bonding-curve-sdk';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import BN from 'bn.js';
@@ -344,4 +348,57 @@ export async function buildPoolTx(
   });
 
   return { transaction, signers: [mintKeypair], baseMint: mintKeypair.publicKey };
+}
+
+/** Meteora's mainnet keepers only auto-migrate pools whose threshold is at least this many SOL. */
+export const KEEPER_MIN_SOL = 10;
+
+export type MigrationStatus = 'bonding' | 'ready' | 'needs-locker' | 'migrated';
+
+/**
+ * Where a pool is in its life cycle.
+ * `ready` means the curve is complete and `migrateToDammV2` can be called by anyone.
+ */
+export function getMigrationStatus(pool: VirtualPool, config: PoolConfig): MigrationStatus {
+  const state = pool.poolState;
+  const progress = Number(state.migrationProgress);
+  if (Number(state.isMigrated) > 0 || progress === 3) return 'migrated';
+  const complete = progress >= 1 || new BN(state.quoteReserve.toString()).gte(new BN(config.migrationQuoteThreshold.toString()));
+  if (!complete) return 'bonding';
+  // Progress 2 = locked vesting must be set up (createLocker) before migrating.
+  return progress === 2 ? 'needs-locker' : 'ready';
+}
+
+export interface MigrateTxInput {
+  connection: Connection;
+  wallet: PublicKey;
+  /** DBC virtual pool address. */
+  pool: PublicKey;
+  config: PoolConfig;
+  baseMint: PublicKey;
+}
+
+/**
+ * Builds the manual DBC -> DAMM v2 migration (`migrateToDammV2`). It is permissionless: any wallet
+ * can pay for it once the curve is complete. The DAMM v2 config key is picked from the config's
+ * migration fee option (DAMM_V2_MIGRATION_FEE_ADDRESS[option]).
+ * Two position NFT mints are created, so both keypairs must co-sign.
+ */
+export async function buildMigrateTx(
+  input: MigrateTxInput
+): Promise<BuiltTx & { dammPool: PublicKey; dammConfig: PublicKey }> {
+  const { connection, wallet, pool, config, baseMint } = input;
+  const dammConfig = DAMM_V2_MIGRATION_FEE_ADDRESS[Number(config.migrationFeeOption)];
+  if (!dammConfig) throw new Error('Unsupported migration fee option for manual migration.');
+
+  const client = DynamicBondingCurveClient.create(connection, 'confirmed');
+  const { transaction, firstPositionNftKeypair, secondPositionNftKeypair } =
+    await client.migration.migrateToDammV2({ payer: wallet, pool, dammConfig });
+
+  return {
+    transaction,
+    signers: [firstPositionNftKeypair, secondPositionNftKeypair],
+    dammConfig,
+    dammPool: deriveDammV2PoolAddress(dammConfig, baseMint, config.quoteMint),
+  };
 }
