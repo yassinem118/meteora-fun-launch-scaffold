@@ -1,5 +1,11 @@
 import React, { useMemo, type CSSProperties } from 'react';
-import { PRESETS, buildConfig, summarizeCurve, type CurveSummary, type PresetId } from '../lib/dbc';
+import { PRESETS, buildConfig, summarizeCurve, type CurveSummary, type Preset, type PresetId } from '../lib/dbc';
+
+interface Tile {
+  preset: Preset;
+  summary: CurveSummary | null;
+  error: string | null;
+}
 import { PRESET_THEME } from '../lib/theme';
 
 interface Props {
@@ -30,7 +36,7 @@ export const PresetMarketplace = ({ selectedId, onSelect }: Props) => {
   // Every tile is computed from the real DBC config, nothing is hard-coded.
   const tiles = useMemo(
     () =>
-      PRESETS.map((preset) => {
+      PRESETS.map((preset): Tile => {
         try {
           return { preset, summary: summarizeCurve(buildConfig(preset.id)), error: null };
         } catch (e) {

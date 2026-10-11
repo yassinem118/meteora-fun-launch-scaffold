@@ -356,17 +356,22 @@ export const KEEPER_MIN_SOL = 10;
 export type MigrationStatus = 'bonding' | 'ready' | 'needs-locker' | 'migrated';
 
 /**
- * Where a pool is in its life cycle.
- * `ready` means the curve is complete and `migrateToDammV2` can be called by anyone.
+ * Where a pool is in its life cycle, from `migration_progress` (per Meteora's docs):
+ *   0 PreBondingCurve   trading on the curve
+ *   1 PostBondingCurve  threshold hit, Jupiter-lock variant only: needs createLocker first
+ *   2 LockedVesting     ready to migrate. This is the NORMAL state right after the curve completes
+ *   3 CreatedPool       migrated, the DAMM pool is live
+ * `ready` means `migrateToDammV2` can be called by anyone.
  */
 export function getMigrationStatus(pool: VirtualPool, config: PoolConfig): MigrationStatus {
   const state = pool.poolState;
   const progress = Number(state.migrationProgress);
   if (Number(state.isMigrated) > 0 || progress === 3) return 'migrated';
-  const complete = progress >= 1 || new BN(state.quoteReserve.toString()).gte(new BN(config.migrationQuoteThreshold.toString()));
-  if (!complete) return 'bonding';
-  // Progress 2 = locked vesting must be set up (createLocker) before migrating.
-  return progress === 2 ? 'needs-locker' : 'ready';
+  if (progress === 0) {
+    const reached = new BN(state.quoteReserve.toString()).gte(new BN(config.migrationQuoteThreshold.toString()));
+    return reached ? 'ready' : 'bonding';
+  }
+  return progress === 1 ? 'needs-locker' : 'ready';
 }
 
 export interface MigrateTxInput {

@@ -1,4 +1,4 @@
-import { ApeQueries, QueryData } from '@/components/Explore/queries';
+import { ApeQueries, QueryData } from '../components/Explore/queries';
 import { atomMsgWithListeners } from '@/lib/jotai';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
@@ -160,11 +160,11 @@ export const DataStreamProvider = ({ children }: { children: React.ReactNode }) 
           },
           (prev?: InfiniteData<QueryData<typeof ApeQueries.tokenTxs>>) => {
             if (!prev?.pages || prev.pages.length === 0) {
-              return;
+              return undefined;
             }
             const firstPage = prev.pages[0];
             if (!firstPage) {
-              return;
+              return undefined;
             }
             const next = firstPage.next;
 

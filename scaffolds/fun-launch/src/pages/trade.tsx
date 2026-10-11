@@ -5,6 +5,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, type Connection, type ParsedAccountData } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Shell } from '../components/Shell';
+import { explainError, sendWithPreflight } from '../lib/send';
 import { KEEPER_MIN_SOL, SOL_MINT, buildMigrateTx, getMigrationStatus } from '../lib/dbc';
 import {
   DynamicBondingCurveClient,
@@ -123,7 +124,7 @@ export default function Trade() {
   }, [queryMint, load]);
 
   useEffect(() => {
-    if (!view) return;
+    if (!view) return undefined;
     const id = setInterval(() => load(view.pool.poolState.baseMint.toBase58(), true), REFRESH_MS);
     return () => clearInterval(id);
   }, [view, load]);
@@ -132,7 +133,7 @@ export default function Trade() {
   useEffect(() => {
     if (!view || !publicKey) {
       setBalances(null);
-      return;
+      return undefined;
     }
     let cancelled = false;
     (async () => {
@@ -212,23 +213,20 @@ export default function Trade() {
         amountIn: quote.amountIn,
         minimumAmountOut: quote.min,
         swapBaseForQuote: side === 'sell',
-        referralTokenAccount: null,
+        referralTokenAccount: null as PublicKey | null,
         payer: publicKey,
       };
       const tx =
         side === 'buy'
           ? await client.pool.swap2({ ...common, swapMode: SwapMode.PartialFill })
           : await client.pool.swap2({ ...common, swapMode: SwapMode.ExactIn });
-      const signature = await sendTransaction(tx, connection);
-      const latest = await connection.getLatestBlockhash('confirmed');
-      const status = await connection.confirmTransaction({ signature, ...latest }, 'confirmed');
-      if (status.value.err) throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+      const signature = await sendWithPreflight({ connection, wallet: publicKey, tx, signers: [], sendTransaction });
       setSwapMsg({ ok: true, text: `Swap confirmed: ${signature}` });
       setAmount('');
       await load(view.pool.poolState.baseMint.toBase58(), true);
     } catch (e) {
       console.error('Swap error:', e);
-      setSwapMsg({ ok: false, text: e instanceof Error ? e.message : 'Swap failed.' });
+      setSwapMsg({ ok: false, text: explainError(e) });
     } finally {
       setSwapping(false);
     }
@@ -260,15 +258,18 @@ export default function Trade() {
         config: view.config,
         baseMint: view.pool.poolState.baseMint,
       });
-      const signature = await sendTransaction(m.transaction, connection, { signers: m.signers });
-      const latest = await connection.getLatestBlockhash('confirmed');
-      const status = await connection.confirmTransaction({ signature, ...latest }, 'confirmed');
-      if (status.value.err) throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+      const signature = await sendWithPreflight({
+        connection,
+        wallet: publicKey,
+        tx: m.transaction,
+        signers: m.signers,
+        sendTransaction,
+      });
       setMigrateMsg({ ok: true, text: `Migrated to DAMM v2. Transaction: ${signature}`, dammPool: m.dammPool.toBase58() });
       await load(view.pool.poolState.baseMint.toBase58(), true);
     } catch (e) {
       console.error('Migration error:', e);
-      setMigrateMsg({ ok: false, text: e instanceof Error ? e.message : 'Migration failed.' });
+      setMigrateMsg({ ok: false, text: explainError(e) });
     } finally {
       setMigrating(false);
     }
@@ -333,7 +334,8 @@ export default function Trade() {
               </p>
               {stats.status === 'needs-locker' ? (
                 <p className="fl-error">
-                  This pool has locked vesting, which needs a createLocker step first. Use Meteora's manual migrator.
+                  This pool uses the Jupiter-lock variant, which needs a createLocker step before migrating. Use{' '}
+                  <a href="https://migrator.meteora.ag/" target="_blank" rel="noreferrer">Meteora's manual migrator</a>.
                 </p>
               ) : (
                 <button

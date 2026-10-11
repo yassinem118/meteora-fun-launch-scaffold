@@ -23,9 +23,11 @@ import {
   getPreset,
   summarizeCurve,
   type PresetId,
+  type CurveSummary,
   type QuoteToken,
 } from '../lib/dbc';
 import { buildShareQuery, type ShareParams } from '../lib/share';
+import { explainError, sendWithPreflight } from '../lib/send';
 import { PRESET_THEME } from '../lib/theme';
 
 const CLUSTER = 'devnet';
@@ -78,10 +80,10 @@ export const CurveVisualizer = ({
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (quoteMode !== 'custom') return;
+    if (quoteMode !== 'custom') return undefined;
     setCustomQuote(null);
     setQuoteError(null);
-    if (!quoteMintInput.trim()) return;
+    if (!quoteMintInput.trim()) return undefined;
     let cancelled = false;
     (async () => {
       try {
@@ -120,7 +122,7 @@ export const CurveVisualizer = ({
   );
 
   // The chart is computed from the exact config that will be sent on-chain.
-  const { summary, configError } = useMemo(() => {
+  const { summary, configError } = useMemo<{ summary: CurveSummary | null; configError: string | null }>(() => {
     try {
       if (!(initialMc > 0) || !(migrationMc > initialMc)) {
         throw new Error('Migration market cap must be greater than the initial market cap.');
@@ -153,11 +155,9 @@ export const CurveVisualizer = ({
   );
 
   const sendAndConfirm = async (tx: Transaction, signers: Keypair[]): Promise<string> => {
-    const signature = await sendTransaction(tx, connection, { signers });
-    const latest = await connection.getLatestBlockhash('confirmed');
-    const status = await connection.confirmTransaction({ signature, ...latest }, 'confirmed');
-    if (status.value.err) throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
-    return signature;
+    if (!publicKey) throw new Error('Connect your wallet first.');
+    // A launch needs about 0.006 SOL per step (rent for the new accounts), so ask for a small margin.
+    return sendWithPreflight({ connection, wallet: publicKey, tx, signers, sendTransaction, minLamports: 15_000_000 });
   };
 
   const handleShare = async () => {
@@ -212,7 +212,7 @@ export const CurveVisualizer = ({
       setResult({ signature, mint: launch.baseMint.toBase58(), pool: pool.toBase58() });
     } catch (e) {
       console.error('DBC launch error:', e);
-      setError(e instanceof Error ? e.message : 'The launch transaction failed.');
+      setError(explainError(e));
     } finally {
       setLoading(false);
       setStep('');

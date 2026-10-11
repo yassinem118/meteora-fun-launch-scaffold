@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PRESETS, getPreset, type PresetId } from '../lib/dbc';
+import { getPreset, type PresetId } from '../lib/dbc';
 
 /**
  * Deterministic, rule-based preset recommender (no LLM, no randomness).

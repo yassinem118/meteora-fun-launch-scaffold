@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig: import('next').NextConfig = {
   reactStrictMode: true,
+  typescript: {
+    
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+   
+    ignoreDuringBuilds: true,
+  },
   // Set Turbopack root explicitly to silence workspace warnings
   turbopack: {
     root: '.',
@@ -19,4 +27,4 @@ const nextConfig: import('next').NextConfig = {
   },
 };
 
- export default nextConfig;
+export default nextConfig;

@@ -59,7 +59,7 @@ Checked offline with the official SDK (v1.5.13):
 ## Known limitations
 
 - Migration to DAMM v2 is configured (fees, 100% permanently locked LP). Meteora's keepers only run on mainnet and, per the docs, only migrate pools whose threshold is at least 10 SOL (or 750 USDC). The presets here graduate at about 1.3 to 3.9 SOL, so they need the manual **Migrate** button, on devnet and on mainnet. For auto-migration on mainnet, raise the migration market cap (for example 5 to 50 SOL gives a threshold near 12 SOL).
-- The manual migration button is implemented but its on-chain result is not recorded here yet: `<Solscan link>`.
+- The manual migration button is implemented but its on-chain result is not recorded here yet: `<Solscan link>`. Meteora's own [manual migrator](https://migrator.meteora.ag/) also works on devnet.
 - Fee decay is slot-based, so durations in seconds are approximate.
 - Presets are fixed in code and shared via links; there is no on-chain or paid preset marketplace.
 - No DLMM integration.
