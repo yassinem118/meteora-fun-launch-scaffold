@@ -1,19 +1,52 @@
-import { ApeQueries, QueryData } from '../components/Explore/queries';
-import { atomMsgWithListeners } from '@/lib/jotai';
-import { InfiniteData, useQueryClient } from '@tanstack/react-query';
-import { useSetAtom } from 'jotai';
+ import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { StreamRequest, StreamResponse } from './TokenChart/msg';
-import { delay } from '@/lib/utils';
+
+type QueryData<T> = {
+  txs: any[];
+  next?: any;
+  args?: Record<string, any>;
+};
+
+type ApeQueriesType = {
+  tokenTxs: (args: { id: string }) => { queryKey: readonly unknown[] };
+};
+
+const ApeQueries: ApeQueriesType = {
+  tokenTxs: ({ id }) => ({
+    queryKey: ['tokenTxs', id],
+  }),
+};
+
+type StreamRequest = {
+  type:
+    | 'subscribe:recent'
+    | 'unsubscribe:recent'
+    | 'subscribe:pool'
+    | 'unsubscribe:pool'
+    | 'subscribe:txns'
+    | 'unsubscribe:txns';
+  filters?: { partnerConfigs: string[] };
+  pools?: string[];
+  assets?: string[];
+};
+
+type StreamResponse = { type: string; data?: any[] };
 
 const WS_URL = 'wss://trench-stream.jup.ag/ws';
 
 const RECONNECT_DELAY_MILLIS = 2_500;
 
-const [dataStreamMsgAtom, useDataStreamListener] = atomMsgWithListeners<StreamResponse | null>(
-  null
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const dataStreamMsgAtom = atom(null as StreamResponse | null);
+const writeDataStreamMsgAtom = atom<null, [StreamResponse | null], void>(
+  null,
+  (_get, set, update) => {
+    set(dataStreamMsgAtom, update);
+  }
 );
-export { useDataStreamListener };
+export const useDataStreamListener = () => useAtomValue(dataStreamMsgAtom);
 
 type DataStreamContextType = {
   subscribePools: (pools: string[]) => void;
@@ -32,7 +65,7 @@ export const DataStreamProvider = ({ children }: { children: React.ReactNode }) 
     () => process.env.NEXT_PUBLIC_POOL_CONFIG_KEY?.split(',') || [],
     []
   );
-  const setDataStreamMsg = useSetAtom(dataStreamMsgAtom);
+  const setDataStreamMsg = useSetAtom(writeDataStreamMsgAtom);
 
   const ws = useRef<WebSocket | null>(null);
   const shouldReconnect = useRef(true);
