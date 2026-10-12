@@ -8,7 +8,9 @@ import { Shell } from '../components/Shell';
 import { explainError, sendWithPreflight } from '../lib/send';
 import { KEEPER_MIN_SOL, SOL_MINT, buildMigrateTx, getMigrationStatus } from '../lib/dbc';
 import {
+  DAMM_V2_MIGRATION_FEE_ADDRESS,
   DynamicBondingCurveClient,
+  deriveDammV2PoolAddress,
   getCurrentPoint,
   getPriceFromSqrtPrice,
   getTokenDecimals,
@@ -153,6 +155,19 @@ export default function Trade() {
       cancelled = true;
     };
   }, [view, publicKey, connection]);
+
+  // The DAMM v2 pool address is deterministic (migration config key + both mints), so it can be shown
+  // for any migrated pool, not only right after pressing Migrate.
+  const dammPoolAddress = useMemo(() => {
+    if (!view) return null;
+    try {
+      const dammConfig = DAMM_V2_MIGRATION_FEE_ADDRESS[Number(view.config.migrationFeeOption)];
+      if (!dammConfig) return null;
+      return deriveDammV2PoolAddress(dammConfig, view.pool.poolState.baseMint, view.quoteMint).toBase58();
+    } catch {
+      return null;
+    }
+  }, [view]);
 
   const stats = useMemo(() => {
     if (!view) return null;
@@ -320,7 +335,17 @@ export default function Trade() {
             </p>
             <p className="fl-note">Current price: {stats.price.toExponential(4)} per token, in quote units.</p>
             {stats.status === 'migrated' && (
-              <p className="fl-success">This pool has graduated. Trading continues on its DAMM v2 pool.</p>
+              <p className="fl-success">
+                This pool has graduated. Trading continues on its DAMM v2 pool.
+                {dammPoolAddress && (
+                  <>
+                    <br />
+                    <a href={`https://solscan.io/account/${dammPoolAddress}?cluster=${CLUSTER}`} target="_blank" rel="noreferrer">
+                      View the DAMM v2 pool on Solscan
+                    </a>
+                  </>
+                )}
+              </p>
             )}
                     </section>
 
@@ -441,4 +466,4 @@ export default function Trade() {
       )}
     </Shell>
   );
-}
+ }
