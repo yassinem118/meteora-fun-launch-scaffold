@@ -8,8 +8,8 @@ Built for the Meteora DBC track of the Superteam hackathon, on top of the meteor
 
 Links
 	
-Live demo	(https://www.loom.com/share/453e2409397e47ffb306585581996e57)
-Demo video (3 min)	[ADD_VIDEO_URL](https://www.loom.com/share/453e2409397e47ffb306585581996e57)
+Live demo	(https://meteora-fun-launch-scaffold.vercel.app/)
+Demo video (3 min) (https://www.loom.com/share/453e2409397e47ffb306585581996e57)
 Source code	https://github.com/yassinem118/meteora-fun-launch-scaffold/tree/main/scaffolds/fun-launch
 Devnet proofs	see below
 Developer API	GET /api/presets, GET /api/curve (docs)
